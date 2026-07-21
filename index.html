@@ -3,556 +3,967 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RealLoop — AI Quality Assurance</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
+  <title>RealLoop — AI Voice Quality Assurance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Epilogue:wght@300;400;500&display=swap" rel="stylesheet">
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #111111;
-      --bg-raised: #1c1c1c;
-      --bg-card:   #222222;
-      --text-hi:   #f0ece4;
-      --text-mid:  #b0aaa2;
-      --text-lo:   #6a6560;
-      --accent:    #e8603a;
-      --accent-dim:#7a3220;
-      --border:    #2e2c29;
-      --white:     #ffffff;
+      --bg:       #0d0c0a;
+      --surface:  #141210;
+      --card:     #1a1815;
+      --text:     #ece7dd;
+      --muted:    #a89d93;
+      --faint:    #6b6358;
+      --accent:   #c0723a;
+      --accent2:  #8a4e26;
+      --border:   #2a241c;
     }
 
     html { scroll-behavior: smooth; }
 
+    /* grain overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.55;
+    }
+
     body {
-      background: var(--bg);
-      color: var(--text-hi);
-      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Epilogue', sans-serif;
       font-weight: 400;
       line-height: 1.7;
       font-size: 16px;
-      -webkit-font-smoothing: antialiased;
       overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
-    /* ── NAV ── */
+    /* ─── NAV ─── */
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
-      z-index: 100;
+      z-index: 200;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.2rem 2rem;
-      background: rgba(17,17,17,0.95);
+      padding: 1.6rem 3.5rem;
+      background: rgba(13, 12, 10, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(10px);
     }
 
     .nav-logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.25rem;
-      color: var(--text-hi);
+      font-family: 'Cormorant', serif;
+      font-weight: 500;
+      font-size: 1.35rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
       text-decoration: none;
-      letter-spacing: 0.01em;
     }
-    .nav-logo span { color: var(--accent); }
+
+    .nav-logo .dot { color: var(--accent); }
 
     .nav-cta {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-hi);
-      background: var(--accent);
+      letter-spacing: 0.15em;
+      color: var(--muted);
       text-decoration: none;
-      padding: 0.55rem 1.1rem;
-      font-weight: 500;
-      transition: opacity 0.2s;
-      border-radius: 2px;
+      transition: color 0.2s;
+      font-weight: 400;
+      padding: 0.6rem 0;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
     }
-    .nav-cta:hover { opacity: 0.85; }
 
-    /* ── HERO ── */
+    .nav-cta:hover { color: var(--text); }
+
+    /* ─── HERO ─── */
     .hero {
       min-height: 100svh;
-      padding: 7rem 2rem 4rem;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 38%;
+      padding-top: 76px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-left {
+      padding: 7rem 3.5rem 5rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
       position: relative;
-      overflow: hidden;
-    }
-
-    .hero::after {
-      content: '';
-      position: absolute;
-      top: -10%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(232,96,58,0.07) 0%, transparent 65%);
-      pointer-events: none;
     }
 
     .hero-eyebrow {
-      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.2em;
       color: var(--accent);
-      margin-bottom: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-weight: 500;
+    }
+
+    .hero-eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+      flex-shrink: 0;
     }
 
     .hero-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(2.6rem, 8vw, 5rem);
+      font-family: 'Cormorant', serif;
+      font-weight: 500;
+      font-size: clamp(3rem, 5vw, 5.2rem);
       line-height: 1.08;
-      letter-spacing: -0.02em;
-      color: var(--text-hi);
-      margin-bottom: 1.5rem;
-      max-width: 14ch;
+      letter-spacing: -0.01em;
+      margin-bottom: 2.2rem;
     }
 
     .hero-title em {
       font-style: italic;
+      font-weight: 300;
       color: var(--accent);
+    }
+
+    .hero-divider {
+      width: 40px;
+      height: 1px;
+      background: var(--faint);
+      margin-bottom: 2.2rem;
     }
 
     .hero-sub {
-      font-size: clamp(1rem, 2.5vw, 1.15rem);
-      color: var(--text-mid);
-      max-width: 48ch;
-      line-height: 1.75;
-      margin-bottom: 2.5rem;
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 400px;
+      line-height: 1.85;
+      margin-bottom: 3rem;
+      font-weight: 400;
     }
 
     .btn-primary {
-      display: inline-block;
-      padding: 1rem 2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.95rem 1.8rem;
+      min-height: 48px;
       background: var(--accent);
-      color: var(--white);
+      color: var(--bg);
+      font-family: 'Epilogue', sans-serif;
       font-size: 0.8rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.13em;
+      letter-spacing: 0.15em;
       text-decoration: none;
-      font-weight: 500;
+      transition: background 0.2s, gap 0.2s;
+      align-self: flex-start;
+      touch-action: manipulation;
+    }
+
+    .btn-primary:hover {
+      background: #d4864a;
+      gap: 0.9rem;
+    }
+
+    .hero-right {
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 5rem 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* decorative background monogram */
+    .hero-mono {
+      position: absolute;
+      bottom: -3rem;
+      right: -1.5rem;
+      font-family: 'Cormorant', serif;
+      font-size: 18rem;
+      line-height: 1;
+      color: var(--border);
+      pointer-events: none;
+      user-select: none;
+      font-weight: 600;
+    }
+
+    /* waveform visualizer */
+    .waveform {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 64px;
+      margin-bottom: 3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .waveform-bar {
+      width: 3px;
+      background: var(--accent);
       border-radius: 2px;
-      transition: opacity 0.2s;
+      transform-origin: bottom;
+      animation: wave-pulse var(--dur, 1.2s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+      opacity: var(--op, 0.7);
+    }
+
+    @keyframes wave-pulse {
+      0%, 100% { transform: scaleY(0.2); }
+      50%       { transform: scaleY(1); }
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.9rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+      z-index: 1;
+      font-weight: 500;
       align-self: flex-start;
     }
-    .btn-primary:hover { opacity: 0.85; }
 
-    .hero-pills {
+    .hero-pill .dot-live {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #5cb85c;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .hero-kpi {
+      position: relative;
+      z-index: 1;
+    }
+
+    .kpi-row {
       display: flex;
+      gap: 2.5rem;
       flex-wrap: wrap;
-      gap: 0.6rem;
-      margin-top: 3rem;
     }
 
-    .pill {
-      font-size: 0.7rem;
+    .kpi-item { }
+
+    .kpi-val {
+      font-family: 'Cormorant', serif;
+      font-size: 2.6rem;
+      font-weight: 400;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-lo);
-      border: 1px solid var(--border);
-      padding: 0.35rem 0.75rem;
-      border-radius: 999px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      font-weight: 500;
     }
 
-    /* ── SECTIONS ── */
+    .kpi-sep {
+      width: 1px;
+      background: var(--border);
+      align-self: stretch;
+    }
+
+    /* ─── SHARED SECTION STYLES ─── */
     .section {
-      padding: 5rem 2rem;
+      padding: 6.5rem 3.5rem;
       border-bottom: 1px solid var(--border);
     }
 
-    .section-eyebrow {
+    .section-head {
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 3rem;
+      align-items: baseline;
+      gap: 1.2rem;
+      margin-bottom: 4.5rem;
     }
 
-    .section-num {
-      font-size: 0.65rem;
+    .sec-num {
+      font-family: 'Cormorant', serif;
+      font-size: 0.9rem;
+      font-weight: 400;
       color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
+      letter-spacing: 0.08em;
+      font-style: italic;
+      flex-shrink: 0;
     }
 
-    .section-line {
-      flex: 1;
-      max-width: 40px;
-      height: 1px;
-      background: var(--border);
+    .sec-title {
+      font-family: 'Cormorant', serif;
+      font-size: clamp(2rem, 3.2vw, 3rem);
+      font-weight: 500;
+      line-height: 1.1;
     }
 
-    .section-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(1.8rem, 5vw, 2.6rem);
-      color: var(--text-hi);
-      line-height: 1.15;
-      margin-bottom: 2.5rem;
-    }
+    /* ─── WHAT WE DO ─── */
+    #about { background: var(--bg); }
 
-    /* ── WHAT WE DO ── */
-    .cards-grid {
+    .what-layout {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
       gap: 1px;
       background: var(--border);
-      border: 1px solid var(--border);
     }
 
-    @media (min-width: 640px) {
-      .cards-grid { grid-template-columns: 1fr 1fr; }
+    .what-card {
+      background: var(--bg);
+      padding: 2.8rem 2.8rem;
+      transition: background 0.3s;
     }
 
-    .card {
-      background: var(--bg-raised);
-      padding: 2rem;
-    }
+    .what-card:hover { background: var(--card); }
 
-    .card:nth-child(even) { background: var(--bg-card); }
+    .what-card:nth-child(2) { background: var(--surface); }
+    .what-card:nth-child(2):hover { background: var(--card); }
+    .what-card:nth-child(4) { background: var(--surface); }
+    .what-card:nth-child(4):hover { background: var(--card); }
 
-    .card-label {
-      font-size: 0.65rem;
+    .wc-label {
+      font-size: 0.72rem;
       text-transform: uppercase;
       letter-spacing: 0.18em;
       color: var(--accent);
-      margin-bottom: 0.75rem;
-    }
-
-    .card h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.2rem;
-      color: var(--text-hi);
-      line-height: 1.3;
-      margin-bottom: 0.75rem;
-    }
-
-    .card p {
-      font-size: 0.9rem;
-      color: var(--text-mid);
-      line-height: 1.7;
-    }
-
-    /* ── HOW WE WORK ── */
-    .how-body {
-      max-width: 65ch;
-    }
-
-    .how-body p {
-      font-size: 1rem;
-      color: var(--text-mid);
-      line-height: 1.85;
-      margin-bottom: 1.25rem;
-    }
-
-    /* ── CAREERS ── */
-    .careers-section {
-      background: var(--bg-raised);
-    }
-
-    .careers-intro {
-      font-size: 1rem;
-      color: var(--text-mid);
-      line-height: 1.8;
-      max-width: 60ch;
-      margin-bottom: 1.5rem;
-    }
-
-    .careers-intro strong {
-      color: var(--text-hi);
+      margin-bottom: 1.2rem;
       font-weight: 500;
+    }
+
+    .wc-icon {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 1.4rem;
+      opacity: 0.6;
+    }
+
+    .what-card h3 {
+      font-family: 'Cormorant', serif;
+      font-size: 1.5rem;
+      font-weight: 500;
+      line-height: 1.25;
+      margin-bottom: 1rem;
+    }
+
+    .what-card p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    /* ─── HOW WE WORK ─── */
+    #how { background: var(--surface); }
+
+    .how-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .how-prose p {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.9;
+      margin-bottom: 1.6rem;
+    }
+
+    .how-prose p:last-child { margin-bottom: 0; }
+
+    .how-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 1.2rem;
+      padding: 1.8rem 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .step:first-child { border-top: 1px solid var(--border); }
+
+    .step-num {
+      font-family: 'Cormorant', serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      color: var(--faint);
+      line-height: 1;
+      padding-top: 0.1rem;
+      font-style: italic;
+    }
+
+    .step-text h4 {
+      font-family: 'Cormorant', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    .step-text p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    /* ─── CAREERS ─── */
+    #careers { background: var(--bg); }
+
+    .careers-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+    }
+
+    .careers-left p {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.85;
+      margin-bottom: 1.8rem;
     }
 
     .tag-row {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 3rem;
+      margin-top: 0.5rem;
     }
 
     .tag {
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      border: 1px solid var(--border);
-      padding: 0.3rem 0.7rem;
-      color: var(--text-mid);
-      border-radius: 2px;
+      letter-spacing: 0.12em;
+      border: 1px solid var(--faint);
+      padding: 0.45rem 0.9rem;
+      color: var(--muted);
+      font-weight: 500;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
     }
 
-    .checklist {
+    .careers-right { }
+
+    .requirements {
       list-style: none;
-      margin-bottom: 2.5rem;
-      border-top: 1px solid var(--border);
+      margin-bottom: 2.8rem;
     }
 
-    .checklist li {
-      font-size: 0.93rem;
-      color: var(--text-mid);
-      padding: 0.9rem 0;
-      border-bottom: 1px solid var(--border);
+    .requirements li {
       display: flex;
       align-items: flex-start;
-      gap: 0.9rem;
-      line-height: 1.5;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.6;
     }
 
-    .checklist li .arrow {
+    .requirements li:first-child { border-top: 1px solid var(--border); }
+
+    .req-arrow {
       color: var(--accent);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       flex-shrink: 0;
       margin-top: 0.1rem;
+      font-weight: 400;
     }
 
+    /* apply box */
     .apply-box {
-      background: var(--bg-card);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      padding: 2rem;
-      border-radius: 2px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .apply-box::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 2px;
+      height: 100%;
+      background: var(--accent);
     }
 
     .apply-box h4 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.3rem;
-      color: var(--text-hi);
-      margin-bottom: 0.6rem;
+      font-family: 'Cormorant', serif;
+      font-size: 1.6rem;
+      font-weight: 500;
+      margin-bottom: 0.7rem;
     }
 
     .apply-box p {
-      font-size: 0.88rem;
-      color: var(--text-mid);
-      line-height: 1.7;
-      margin-bottom: 1.25rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 1.8rem;
     }
 
     .apply-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.6rem;
       color: var(--accent);
-      font-weight: 500;
-      font-size: 0.9rem;
       text-decoration: none;
-      letter-spacing: 0.02em;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: gap 0.2s, color 0.2s;
+      min-height: 44px;
+      touch-action: manipulation;
     }
-    .apply-link:hover { opacity: 0.8; }
 
-    /* ── FOOTER ── */
-    footer {
-      padding: 2.5rem 2rem;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      background: #0a0a0a;
+    .apply-link:hover { gap: 0.9rem; color: var(--text); }
+
+    /* ─── MARQUEE STRIP ─── */
+    .marquee-strip {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
       border-top: 1px solid var(--border);
+      padding: 1rem 0;
+      overflow: hidden;
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 0;
+      animation: marquee 28s linear infinite;
+      width: max-content;
+    }
+
+    .marquee-item {
+      white-space: nowrap;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      padding: 0 2.5rem;
+      font-weight: 500;
+    }
+
+    .marquee-item .sep {
+      color: var(--accent);
+      margin-right: 2.5rem;
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      padding: 3rem 3.5rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 2rem;
     }
 
     .footer-logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.1rem;
-      color: var(--text-hi);
-    }
-    .footer-logo span { color: var(--accent); }
-
-    .footer-email {
-      font-size: 0.82rem;
-      color: var(--text-lo);
+      font-family: 'Cormorant', serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: 0.04em;
     }
 
-    .footer-email a {
-      color: var(--text-mid);
+    .footer-logo .dot { color: var(--accent); }
+
+    .footer-center {
+      text-align: center;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .footer-contact {
+      text-align: right;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .footer-contact a {
+      color: var(--muted);
       text-decoration: none;
+      transition: color 0.2s;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      touch-action: manipulation;
     }
-    .footer-email a:hover { color: var(--text-hi); }
 
-    /* ── ANIMATIONS ── */
+    .footer-contact a:hover { color: var(--text); }
+
+    /* ─── REVEAL ANIMATIONS ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* hero entrance */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(28px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .hero-eyebrow { animation: fadeUp 0.5s ease both; }
-    .hero-title   { animation: fadeUp 0.5s 0.08s ease both; }
-    .hero-sub     { animation: fadeUp 0.5s 0.16s ease both; }
-    .btn-primary  { animation: fadeUp 0.5s 0.24s ease both; }
-    .hero-pills   { animation: fadeUp 0.5s 0.32s ease both; }
+    .hero-eyebrow { animation: fadeUp 0.7s ease both; }
+    .hero-title   { animation: fadeUp 0.7s 0.12s ease both; }
+    .hero-divider { animation: fadeUp 0.7s 0.18s ease both; }
+    .hero-sub     { animation: fadeUp 0.7s 0.22s ease both; }
+    .btn-primary  { animation: fadeUp 0.7s 0.32s ease both; }
 
-    /* ── DESKTOP OVERRIDES ── */
-    @media (min-width: 900px) {
-      nav { padding: 1.4rem 4rem; }
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 960px) {
+      nav { padding: 1rem 1.25rem; }
 
-      .hero {
-        padding: 9rem 4rem 6rem;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        align-items: center;
-        gap: 4rem;
-        min-height: 100vh;
-      }
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-left { padding: 5.5rem 1.25rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .hero-right { padding: 2.5rem 1.25rem; }
+      .hero-mono { font-size: 10rem; }
+      .kpi-row { gap: 1.5rem; }
+      .kpi-sep { display: none; }
 
-      .hero-content { }
-      .hero-right-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 2.5rem;
-        padding: 3rem;
-        background: var(--bg-raised);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-      }
+      .section { padding: 3.5rem 1.25rem; }
 
-      .hero-pills { margin-top: 0; }
+      .what-layout { grid-template-columns: 1fr; }
+      .what-card { padding: 2rem 1.5rem; }
 
-      .section { padding: 7rem 4rem; }
+      .how-body { grid-template-columns: 1fr; gap: 2.5rem; }
 
-      .careers-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 5rem;
-      }
+      .careers-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+
+      footer { grid-template-columns: 1fr; text-align: center; padding: 2rem 1.25rem; }
+      .footer-contact { text-align: center; }
+
+      /* bigger touch-friendly font sizes on mobile */
+      .sec-num { font-size: 0.9rem; }
+      .hero-eyebrow { font-size: 0.8rem; }
+      .wc-label { font-size: 0.75rem; }
+      .kpi-label { font-size: 0.75rem; }
+      .marquee-item { font-size: 0.75rem; }
+      .tag { font-size: 0.75rem; }
+      .nav-cta { font-size: 0.82rem; letter-spacing: 0.12em; }
+
+      /* ensure a comfortable read size on small screens */
+      .what-card p,
+      .step-text p,
+      .how-prose p,
+      .careers-left p,
+      .requirements li,
+      .apply-box p { font-size: 0.95rem; }
     }
 
-    /* ── MOBILE ONLY ── */
-    @media (max-width: 899px) {
-      .hero-right-panel { display: none; }
-      .careers-grid { display: block; }
-      .careers-grid .careers-list { margin-top: 2rem; }
+    @media (max-width: 480px) {
+      .hero-title { font-size: 2.6rem; }
+      .kpi-val { font-size: 2rem; }
+      .hero-right { display: none; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-left { padding: 5rem 1.25rem 3rem; min-height: 100svh; min-height: -webkit-fill-available; display: flex; flex-direction: column; justify-content: center; border-bottom: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- NAV -->
+  <!-- ─── NAV ─── -->
   <nav>
-    <a href="#" class="nav-logo">Real<span>Loop</span></a>
-    <a href="#careers" class="nav-cta">We're Hiring</a>
+    <a href="#" class="nav-logo">Real<span class="dot">.</span>Loop</a>
+    <a href="#careers" class="nav-cta">We're Hiring &rarr;</a>
   </nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-content">
+  <!-- ─── HERO ─── -->
+  <section class="hero" style="border-bottom: 1px solid var(--border); padding: 0;">
+    <div class="hero-left">
       <p class="hero-eyebrow">AI Quality Assurance</p>
-      <h1 class="hero-title">Making AI <em>sound human.</em> One call at a time.</h1>
-      <p class="hero-sub">RealLoop helps enterprise teams understand where their voice AI agents fall short — and why.</p>
-      <a href="#careers" class="btn-primary">Join Our Reviewer Network</a>
-      <div class="hero-pills">
-        <span class="pill">Voice AI</span>
-        <span class="pill">Call Evaluation</span>
-        <span class="pill">Remote Work</span>
-        <span class="pill">Hindi + English</span>
-      </div>
+      <h1 class="hero-title">Making AI<br><em>sound human.</em><br>One call at a time.</h1>
+      <div class="hero-divider"></div>
+      <p class="hero-sub">RealLoop helps enterprise teams understand where their voice AI agents fall short — and why. Human judgment, calibrated at scale.</p>
+      <a href="#careers" class="btn-primary">Join Our Reviewer Network &rarr;</a>
     </div>
-    <div class="hero-right-panel">
-      <div>
-        <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.18em;color:var(--text-lo);margin-bottom:0.4rem;">What We Evaluate</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--text-hi);line-height:1.1;">Voice AI<br>Quality</div>
+    <div class="hero-right">
+      <div class="hero-mono" aria-hidden="true">RL</div>
+
+      <div class="hero-pill">
+        <span class="dot-live"></span>
+        Evaluations Active
       </div>
-      <div style="height:1px;background:var(--border);"></div>
-      <div>
-        <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.18em;color:var(--text-lo);margin-bottom:0.4rem;">How We Work</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--text-hi);line-height:1.1;">Human<br>Judgment</div>
+
+      <!-- animated waveform -->
+      <div class="waveform" aria-hidden="true">
+        <div class="waveform-bar" style="height:38px;--dur:0.9s;--delay:0s;--op:.5"></div>
+        <div class="waveform-bar" style="height:52px;--dur:1.1s;--delay:0.08s;--op:.65"></div>
+        <div class="waveform-bar" style="height:44px;--dur:1.0s;--delay:0.14s;--op:.6"></div>
+        <div class="waveform-bar" style="height:58px;--dur:1.3s;--delay:0.04s;--op:.75"></div>
+        <div class="waveform-bar" style="height:64px;--dur:0.85s;--delay:0.2s;--op:.85"></div>
+        <div class="waveform-bar" style="height:48px;--dur:1.15s;--delay:0.1s;--op:.7"></div>
+        <div class="waveform-bar" style="height:60px;--dur:0.95s;--delay:0.18s;--op:.8"></div>
+        <div class="waveform-bar" style="height:40px;--dur:1.05s;--delay:0.06s;--op:.6"></div>
+        <div class="waveform-bar" style="height:54px;--dur:1.2s;--delay:0.24s;--op:.7"></div>
+        <div class="waveform-bar" style="height:62px;--dur:0.88s;--delay:0.12s;--op:.82"></div>
+        <div class="waveform-bar" style="height:46px;--dur:1.08s;--delay:0.16s;--op:.65"></div>
+        <div class="waveform-bar" style="height:56px;--dur:0.92s;--delay:0.22s;--op:.75"></div>
+        <div class="waveform-bar" style="height:36px;--dur:1.18s;--delay:0.02s;--op:.5"></div>
+        <div class="waveform-bar" style="height:50px;--dur:1.0s;--delay:0.28s;--op:.68"></div>
+        <div class="waveform-bar" style="height:42px;--dur:0.96s;--delay:0.08s;--op:.58"></div>
       </div>
-      <div style="height:1px;background:var(--border);"></div>
-      <div>
-        <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.18em;color:var(--text-lo);margin-bottom:0.4rem;">Engagement Type</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:2rem;color:var(--text-hi);line-height:1.1;">Remote<br>Part-Time</div>
+
+      <div class="hero-kpi">
+        <div class="kpi-row">
+          <div class="kpi-item">
+            <div class="kpi-val">Voice AI</div>
+            <div class="kpi-label">Quality Evaluation</div>
+          </div>
+          <div class="kpi-sep"></div>
+          <div class="kpi-item">
+            <div class="kpi-val">Human</div>
+            <div class="kpi-label">Judgment at Scale</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- WHAT WE DO -->
+  <!-- ─── MARQUEE ─── -->
+  <div class="marquee-strip" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item">Voice AI Evaluation <span class="sep">/</span></span>
+      <span class="marquee-item">Call Auditing <span class="sep">/</span></span>
+      <span class="marquee-item">Quality Rubrics <span class="sep">/</span></span>
+      <span class="marquee-item">Enterprise Voice Agents <span class="sep">/</span></span>
+      <span class="marquee-item">Hindi &amp; English <span class="sep">/</span></span>
+      <span class="marquee-item">Calibrated Reviewers <span class="sep">/</span></span>
+      <span class="marquee-item">Structured Feedback <span class="sep">/</span></span>
+      <span class="marquee-item">Remote Part-Time Roles <span class="sep">/</span></span>
+      <!-- duplicate for seamless loop -->
+      <span class="marquee-item">Voice AI Evaluation <span class="sep">/</span></span>
+      <span class="marquee-item">Call Auditing <span class="sep">/</span></span>
+      <span class="marquee-item">Quality Rubrics <span class="sep">/</span></span>
+      <span class="marquee-item">Enterprise Voice Agents <span class="sep">/</span></span>
+      <span class="marquee-item">Hindi &amp; English <span class="sep">/</span></span>
+      <span class="marquee-item">Calibrated Reviewers <span class="sep">/</span></span>
+      <span class="marquee-item">Structured Feedback <span class="sep">/</span></span>
+      <span class="marquee-item">Remote Part-Time Roles <span class="sep">/</span></span>
+    </div>
+  </div>
+
+  <!-- ─── WHAT WE DO ─── -->
   <section class="section" id="about">
-    <div class="section-eyebrow">
-      <span class="section-num">01</span>
-      <div class="section-line"></div>
+    <div class="section-head reveal">
+      <span class="sec-num">01</span>
+      <h2 class="sec-title">What We Do</h2>
     </div>
-    <h2 class="section-title">What We Do</h2>
-    <div class="cards-grid">
-      <div class="card">
-        <div class="card-label">The Problem</div>
-        <h3>Voice AI is only as good as the quality signal behind it.</h3>
-        <p>Enterprise teams deploying voice agents at scale need a structured way to understand where their AI falls short — in pronunciation, tone, response accuracy, and user experience.</p>
+    <div class="what-layout">
+
+      <div class="what-card reveal">
+        <div class="wc-label">The Problem</div>
+        <svg class="wc-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 4a8 8 0 0 1 8 8v4a8 8 0 0 1-16 0v-4a8 8 0 0 1 8-8z" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M6 14h-.5a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2H6M22 14h.5a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H22" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M14 24v3M10 27h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <h3>Voice AI is only as good as its quality signal.</h3>
+        <p>Enterprise teams deploying voice agents at scale need a structured way to understand where their AI falls short — in tone, accuracy, pronunciation, and real-world experience.</p>
       </div>
-      <div class="card">
-        <div class="card-label">Our Work</div>
+
+      <div class="what-card reveal reveal-delay-1">
+        <div class="wc-label">Our Work</div>
+        <svg class="wc-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="5" width="22" height="18" rx="1.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M3 10h22M8 5v5M20 5v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M7 16h6M7 20h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
         <h3>Structured audit frameworks for real conversations.</h3>
-        <p>We build and run evaluation pipelines that produce consistent, actionable output — so AI teams can improve faster and with confidence.</p>
+        <p>We build and run evaluation pipelines that produce consistent, actionable output — so AI teams can improve faster, with confidence, on every release cycle.</p>
       </div>
-      <div class="card">
-        <div class="card-label">Who We Work With</div>
+
+      <div class="what-card reveal reveal-delay-2">
+        <div class="wc-label">Who We Work With</div>
+        <svg class="wc-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="9" r="4" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="20" cy="9" r="4" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M2 23c0-4 3.6-7 8-7M18 16c4.4 0 8 3 8 7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M14 16c-2.2 0-4 1.8-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
         <h3>AI teams deploying voice agents at scale.</h3>
-        <p>Our clients operate in fintech, edtech, and enterprise SaaS — industries where voice AI quality directly impacts customer outcomes.</p>
+        <p>Our clients operate in fintech, edtech, and enterprise SaaS — industries where the quality of a voice interaction directly impacts customer outcomes and retention.</p>
       </div>
-      <div class="card">
-        <div class="card-label">Our Edge</div>
+
+      <div class="what-card reveal reveal-delay-3">
+        <div class="wc-label">Our Edge</div>
+        <svg class="wc-icon" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 3l2.6 5.2 5.7.84-4.15 4.03.98 5.7L14 16l-5.13 2.77.98-5.7L5.7 9.04l5.7-.84L14 3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+          <path d="M6 22h16" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M9 25h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
         <h3>Human judgment, calibrated and consistent.</h3>
-        <p>We don't just flag issues — we train reviewers to follow structured rubrics that engineering and product teams can actually act on.</p>
+        <p>We don't just flag issues — we train reviewers to follow structured rubrics that engineering and product teams can act on directly, sprint over sprint.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── HOW WE WORK ─── -->
+  <section class="section" id="how">
+    <div class="section-head reveal">
+      <span class="sec-num">02</span>
+      <h2 class="sec-title">How We Work</h2>
+    </div>
+    <div class="how-body">
+      <div class="how-prose">
+        <p class="reveal">We embed trained reviewers into client pipelines on a project basis. Our reviewers are not transcriptionists — they are calibrated evaluators who follow structured rubrics and produce output that engineering and product teams can use directly.</p>
+        <p class="reveal reveal-delay-1">Every engagement starts with a calibration phase, where we align reviewers to the specific agent, use case, and quality bar before any live reviewing begins. This ensures consistency across the team and across the life of the project.</p>
+        <p class="reveal reveal-delay-2">Our work sits at the intersection of human judgment and AI systems — and we take both seriously. We build pipelines, not guesswork.</p>
+      </div>
+      <div class="how-steps reveal reveal-delay-1">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-text">
+            <h4>Discovery &amp; Scoping</h4>
+            <p>We learn your agent's deployment context, failure modes, and the quality bar that matters to your team.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-text">
+            <h4>Rubric Design</h4>
+            <p>We build a structured evaluation framework tailored to your use case — tone, accuracy, language, response quality.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-text">
+            <h4>Reviewer Calibration</h4>
+            <p>Reviewers are trained and calibrated before live work begins, ensuring consistent output across the team.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-text">
+            <h4>Evaluation &amp; Delivery</h4>
+            <p>Structured reports delivered on your cadence. Findings are actionable — not just flagged, but prioritised.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- HOW WE WORK -->
-  <section class="section" id="how">
-    <div class="section-eyebrow">
-      <span class="section-num">02</span>
-      <div class="section-line"></div>
+  <!-- ─── CAREERS ─── -->
+  <section class="section" id="careers" style="background: var(--surface);">
+    <div class="section-head reveal">
+      <span class="sec-num">03</span>
+      <h2 class="sec-title">Join Our Reviewer Network</h2>
     </div>
-    <h2 class="section-title">How We Work</h2>
-    <div class="how-body">
-      <p>We embed trained reviewers into client pipelines on a project basis. Our reviewers are not transcriptionists — they are calibrated evaluators who follow structured rubrics and produce output that engineering and product teams can use directly.</p>
-      <p>Every engagement starts with a calibration phase, where we align reviewers to the specific agent, use case, and quality bar before any live reviewing begins. This ensures consistency across the team and across the life of the project.</p>
-      <p>Our work sits at the intersection of human judgment and AI systems — and we take both seriously.</p>
-    </div>
-  </section>
-
-  <!-- CAREERS -->
-  <section class="section careers-section" id="careers">
-    <div class="section-eyebrow">
-      <span class="section-num">03</span>
-      <div class="section-line"></div>
-    </div>
-    <h2 class="section-title">Join Our Reviewer Network</h2>
     <div class="careers-grid">
-      <div class="careers-intro-col">
-        <p class="careers-intro">We're building a team of part-time AI call reviewers — sharp listeners who are detail-oriented and comfortable working with structured formats.</p>
-        <p class="careers-intro">This is a <strong>paid, remote, part-time engagement.</strong> Work is project-based, with potential for long-term collaboration based on performance.</p>
-        <div class="tag-row">
+      <div class="careers-left">
+        <p class="reveal">We're building a team of part-time AI call reviewers — sharp listeners who are detail-oriented and comfortable working within structured formats.</p>
+        <p class="reveal reveal-delay-1">This is a <strong>paid, remote, part-time engagement.</strong> Work is project-based, with potential for long-term collaboration based on performance. Flexibility is built in — you choose your hours within the project window.</p>
+        <p class="reveal reveal-delay-2">We work in <strong>Hindi and English</strong>, and value people who are precise, reliable, and genuinely curious about how AI systems communicate.</p>
+        <div class="tag-row reveal reveal-delay-3">
           <span class="tag">Remote</span>
           <span class="tag">Part-Time</span>
-          <span class="tag">Flexible Hours</span>
+          <span class="tag">3–8 hrs / day</span>
           <span class="tag">Hindi + English</span>
           <span class="tag">Paid</span>
-        </div>
-        <div class="apply-box">
-          <h4>Ready to Apply?</h4>
-          <p>Write to us with a short note about yourself — your background, availability, and why this interests you.</p>
-          <a href="mailto:hire@realloop.in" class="apply-link">hire@realloop.in →</a>
+          <span class="tag">Flexible Schedule</span>
         </div>
       </div>
-      <div class="careers-list">
-        <ul class="checklist">
-          <li><span class="arrow">→</span> Listen to recorded AI voice agent calls in Hindi and English</li>
-          <li><span class="arrow">→</span> Flag specific issues against a defined checklist</li>
-          <li><span class="arrow">→</span> Log findings in a simple structured format</li>
-          <li><span class="arrow">→</span> 3 to 8 hours a day, flexible schedule</li>
-          <li><span class="arrow">→</span> Strong attention to detail and good language comprehension</li>
-          <li><span class="arrow">→</span> Comfortable with technology and basic spreadsheets</li>
-          <li><span class="arrow">→</span> Prior ops, customer support, or QA experience is a plus — not required</li>
+      <div class="careers-right">
+        <ul class="requirements reveal reveal-delay-1">
+          <li><span class="req-arrow">&#8594;</span> Listen to recorded AI voice agent calls in Hindi and English</li>
+          <li><span class="req-arrow">&#8594;</span> Flag specific issues against a defined quality checklist</li>
+          <li><span class="req-arrow">&#8594;</span> Log findings in a structured format — no guesswork, just precision</li>
+          <li><span class="req-arrow">&#8594;</span> 3–8 hours a day, flexible schedule within project windows</li>
+          <li><span class="req-arrow">&#8594;</span> Strong attention to detail and good language comprehension</li>
+          <li><span class="req-arrow">&#8594;</span> Prior ops, support, or QA experience a plus — not required</li>
         </ul>
+        <div class="apply-box reveal reveal-delay-2">
+          <h4>Ready to Apply?</h4>
+          <p>Write to us with a short note about yourself — your background, availability, and why this interests you. No formal CV required.</p>
+          <a href="mailto:hire@realloop.in" class="apply-link">hire@realloop.in &rarr;</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER -->
+  <!-- ─── FOOTER ─── -->
   <footer>
-    <div class="footer-logo">Real<span>Loop</span></div>
-    <div class="footer-email">Project enquiries: <a href="mailto:manavi@realloop.in">manavi@realloop.in</a></div>
+    <div class="footer-logo">Real<span class="dot">.</span>Loop</div>
+    <div class="footer-center">&copy; 2025 RealLoop</div>
+    <div class="footer-contact">
+      <a href="mailto:hire@realloop.in">hire@realloop.in</a>
+    </div>
   </footer>
+
+  <script>
+    // Intersection observer for scroll reveals
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    revealEls.forEach(el => io.observe(el));
+  </script>
 
 </body>
 </html>
