@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RealLoop — AI Quality Assurance</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0d0d0d;
+      --off-white: #f5f2ec;
+      --cream: #ede9e0;
+      --accent: #c94f2a;
+      --muted: #7a7570;
+      --border: #d6d0c6;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--off-white);
+      color: var(--black);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 4rem;
+      background: var(--off-white);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      letter-spacing: 0.02em;
+      color: var(--black);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--accent); }
+
+    nav a.nav-link {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    nav a.nav-link:hover { color: var(--black); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding-top: 80px;
+    }
+
+    .hero-left {
+      padding: 8rem 4rem 6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      margin-bottom: 2rem;
+    }
+
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.8rem, 4.5vw, 4.5rem);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 2rem;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 420px;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2rem;
+      background: var(--black);
+      color: var(--off-white);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.2s, color 0.2s;
+      align-self: flex-start;
+    }
+
+    .btn:hover { background: var(--accent); }
+
+    .hero-right {
+      padding: 8rem 4rem 6rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--cream);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-right::before {
+      content: "RL";
+      position: absolute;
+      bottom: -2rem;
+      right: -1rem;
+      font-family: 'DM Serif Display', serif;
+      font-size: 22rem;
+      color: var(--border);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .stat-block {
+      margin-bottom: 3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 3.5rem;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 7rem 4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+
+    .section-num {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+    }
+
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      line-height: 1.15;
+    }
+
+    /* WHAT WE DO */
+    .what-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .what-card {
+      background: var(--off-white);
+      padding: 3rem;
+    }
+
+    .what-card:nth-child(odd) { background: var(--cream); }
+
+    .what-card-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .what-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .what-card p {
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    /* HOW WE WORK */
+    .how-body {
+      max-width: 680px;
+    }
+
+    .how-body p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.85;
+      margin-bottom: 1.5rem;
+    }
+
+    /* CAREERS */
+    .careers-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+    }
+
+    .careers-left { }
+
+    .careers-left p {
+      font-size: 1rem;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+
+    .careers-right { }
+
+    .checklist {
+      list-style: none;
+      margin-bottom: 2.5rem;
+    }
+
+    .checklist li {
+      font-size: 0.92rem;
+      color: var(--muted);
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+      line-height: 1.5;
+    }
+
+    .checklist li::before {
+      content: "→";
+      color: var(--accent);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .apply-box {
+      background: var(--black);
+      color: var(--off-white);
+      padding: 2.5rem;
+    }
+
+    .apply-box h4 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .apply-box p {
+      font-size: 0.88rem;
+      color: #aaa;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    .apply-box a {
+      color: var(--off-white);
+      font-weight: 500;
+      font-size: 0.88rem;
+      letter-spacing: 0.05em;
+    }
+
+    .apply-box a:hover { color: var(--accent); }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.7rem;
+      color: var(--muted);
+      margin: 0.2rem 0.2rem 0.2rem 0;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 3rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--black);
+      color: var(--off-white);
+    }
+
+    .footer-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+    }
+
+    .footer-logo span { color: var(--accent); }
+
+    .footer-contact {
+      font-size: 0.82rem;
+      color: #888;
+    }
+
+    .footer-contact a {
+      color: #aaa;
+      text-decoration: none;
+    }
+
+    .footer-contact a:hover { color: var(--off-white); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-eyebrow { animation: fadeUp 0.6s ease both; }
+    .hero-title   { animation: fadeUp 0.6s 0.1s ease both; }
+    .hero-sub     { animation: fadeUp 0.6s 0.2s ease both; }
+    .btn          { animation: fadeUp 0.6s 0.3s ease both; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-left { padding: 6rem 1.5rem 3rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .hero-right { padding: 3rem 1.5rem; }
+      .hero-right::before { font-size: 12rem; }
+      section { padding: 4rem 1.5rem; }
+      .what-grid { grid-template-columns: 1fr; }
+      .careers-wrap { grid-template-columns: 1fr; gap: 3rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">Real<span>Loop</span></a>
+    <a href="#careers" class="nav-link">We're Hiring →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" style="padding:0; border-bottom: 1px solid var(--border);">
+    <div class="hero-left">
+      <p class="hero-eyebrow">AI Quality Assurance</p>
+      <h1 class="hero-title">Making AI<br><em>sound human.</em><br>One call at a time.</h1>
+      <p class="hero-sub">RealLoop helps enterprise teams understand where their voice AI agents fall short — and why.</p>
+      <a href="#careers" class="btn">Join Our Reviewer Network</a>
+    </div>
+    <div class="hero-right">
+      <div class="stat-block">
+        <div class="stat-num">Voice AI</div>
+        <div class="stat-label">Quality Evaluation</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num">Human</div>
+        <div class="stat-label">Judgment at Scale</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-num">Remote</div>
+        <div class="stat-label">Part-Time Roles Open</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT WE DO -->
+  <section id="about">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">What We Do</h2>
+    </div>
+    <div class="what-grid">
+      <div class="what-card">
+        <div class="what-card-label">The Problem</div>
+        <h3>Voice AI is only as good as the quality signal behind it.</h3>
+        <p>Enterprise teams deploying voice agents at scale need a structured way to understand where their AI falls short — in pronunciation, tone, response accuracy, and user experience.</p>
+      </div>
+      <div class="what-card">
+        <div class="what-card-label">Our Work</div>
+        <h3>Structured audit frameworks for real conversations.</h3>
+        <p>We build and run evaluation pipelines that produce consistent, actionable output — so AI teams can improve faster and with confidence.</p>
+      </div>
+      <div class="what-card">
+        <div class="what-card-label">Who We Work With</div>
+        <h3>AI teams deploying voice agents at scale.</h3>
+        <p>Our clients operate in fintech, edtech, and enterprise SaaS — industries where voice AI quality directly impacts customer outcomes.</p>
+      </div>
+      <div class="what-card">
+        <div class="what-card-label">Our Edge</div>
+        <h3>Human judgment, calibrated and consistent.</h3>
+        <p>We don't just flag issues — we train reviewers to follow structured rubrics that engineering and product teams can actually act on.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW WE WORK -->
+  <section id="how">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">How We Work</h2>
+    </div>
+    <div class="how-body">
+      <p>We embed trained reviewers into client pipelines on a project basis. Our reviewers are not transcriptionists — they are calibrated evaluators who follow structured rubrics and produce output that engineering and product teams can use directly.</p>
+      <p>Every engagement starts with a calibration phase, where we align reviewers to the specific agent, use case, and quality bar before any live reviewing begins. This ensures consistency across the team and across the life of the project.</p>
+      <p>Our work sits at the intersection of human judgment and AI systems — and we take both seriously.</p>
+    </div>
+  </section>
+
+  <!-- CAREERS -->
+  <section id="careers" style="background: var(--cream);">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Join Our Reviewer Network</h2>
+    </div>
+    <div class="careers-wrap">
+      <div class="careers-left">
+        <p>We're building a team of part-time AI call reviewers — sharp listeners who are detail-oriented and comfortable working with structured formats.</p>
+        <p>This is a <strong>paid, remote, part-time engagement.</strong> Work is project-based, with potential for long-term collaboration based on performance.</p>
+        <div>
+          <span class="tag">Remote</span>
+          <span class="tag">Part-Time</span>
+          <span class="tag">Flexible Hours</span>
+          <span class="tag">Hindi + English</span>
+          <span class="tag">Paid</span>
+        </div>
+      </div>
+      <div class="careers-right">
+        <ul class="checklist">
+          <li>Listen to recorded AI voice agent calls in Hindi and English</li>
+          <li>Flag specific issues against a defined checklist</li>
+          <li>Log findings in a simple structured format</li>
+          <li>2–3 hours a day, flexible schedule</li>
+          <li>Strong attention to detail and good language comprehension</li>
+          <li>Prior ops, customer support, or QA experience is a plus — not required</li>
+        </ul>
+        <div class="apply-box">
+          <h4>Ready to Apply?</h4>
+          <p>Write to us with a short note about yourself — your background, availability, and why this interests you.</p>
+          <a href="mailto:hire@realloop.in">hire@realloop.in →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Real<span>Loop</span></div>
+    <div class="footer-contact">
+      Project enquiries: <a href="mailto:manavi@realloop.in">manavi@realloop.in</a>
+    </div>
+  </footer>
+
+</body>
+</html>
