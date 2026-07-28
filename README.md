@@ -1,17 +1,18 @@
 # RealLoop
 
-Marketing site for RealLoop — AI Voice Quality Assurance. Live at https://realloop.in/
+Marketing site for RealLoop — a marketplace for credible human judgment on production AI. Live at https://realloop.in/
 
 ## Files
 - `index.html` — the live production site (mirrors what's deployed at realloop.in)
+- `screens/` — product screenshots embedded in the page (`use-case`, `insights`, `reliability`, `training-mobile`)
 - `archive-dark-early.html` / `archive-light-early.html` — earlier design explorations, kept for reference
 
-It's a single self-contained HTML file (only external dependency is Google Fonts).
+It's a single self-contained HTML file. External dependencies are Google Fonts (Space Grotesk, Instrument Sans, IBM Plex Mono) and the local screenshots in `screens/`. It also links out to the `marketplace.realloop.in` and `portal.realloop.in` subdomains.
 
 ## Hosting & deploys
-- Hosted on **Netlify** (site `realloop.netlify.app`), custom domain `realloop.in`.
-- Once this repo is connected to the Netlify site, every commit to `main` auto-deploys to realloop.in.
+- Custom domain `realloop.in`.
+- **Note:** the live site had drifted significantly from this repo in the past, so confirm how the domain actually deploys before assuming a push here updates production. GitHub lists a Vercel URL (`bolna-call-auditing.vercel.app`) as the homepage.
 
 ## Editing
-- **In the browser:** open `index.html` on GitHub → pencil icon → edit → **Commit changes**. Netlify redeploys automatically.
+- **In the browser:** open `index.html` on GitHub → pencil icon → edit → **Commit changes**.
 - **Locally:** clone, open `index.html` in a browser to preview, edit, commit, push.
