@@ -3,286 +3,539 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RealLoop · marketplace for credible human judgment</title>
-<meta name="description" content="RealLoop puts a screened, trained panel of reviewers on your AI's production problem in days, and measures how much that panel can be trusted.">
+<title>RealLoop · human layer for AI deployment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body { margin: 0; background: #f5f7f9; color: #10181f; font-family: 'Instrument Sans', sans-serif; -webkit-text-size-adjust: 100%; }
   a { color: #0e8a5f; text-decoration: none; }
   a:hover { color: #0a6b4a; }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
-  /* the design tool expresses hovers as style-hover attributes, which are a
-     preview-runtime feature; here they are plain CSS */
-  .rl-navlink:hover { color: #10181f; }
-  .rl-cta:hover { background: #0a6b4a; color: #fff; }
-  .rl-cta-ghost:hover { border-color: #10181f; color: #10181f; }
-  .rl-cta-mint:hover { background: #4ad9a0; color: #10181f; }
-
-  /* product screenshots · a browser frame so a real screen reads as a real
-     screen rather than as an illustration */
-  .shot { border: 1px solid #e2e8ee; border-radius: 14px; overflow: hidden; background: #fff;
-          box-shadow: 0 18px 44px rgba(16,24,31,0.10); }
-  .shot .bar { display: flex; align-items: center; gap: 7px; padding: 10px 14px;
-               background: #fbfcfd; border-bottom: 1px solid #e2e8ee; }
-  .shot .dot { width: 9px; height: 9px; border-radius: 999px; background: #dfe6ed; }
-  .shot .addr { margin-left: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; color: #93a1ae; }
-  .shot img { display: block; width: 100%; height: auto; }
-
-  /* phone frame for the reviewer screen */
-  .phone { width: 280px; max-width: 78vw; border: 9px solid #10181f; border-radius: 34px;
-           overflow: hidden; background: #10181f; box-shadow: 0 20px 50px rgba(0,0,0,0.30); flex: none; }
-  .phone img { display: block; width: 100%; height: auto; }
-
-  .cap { margin: 12px 0 0; font-size: 13.5px; color: #6b7885; line-height: 1.55; }
-
-  /* team · the name is the link, LinkedIn mark sits beside it */
-  .rl-name { display: inline-flex; align-items: center; gap: 10px; color: #10181f;
-             font-family: 'Space Grotesk', sans-serif; font-weight: 600;
-             font-size: clamp(20px, 2.6vw, 26px); letter-spacing: -0.015em;
-             min-height: 44px; }
-  .rl-name svg { width: 19px; height: 19px; flex: none; fill: #93a1ae; transition: fill .15s ease; }
-  .rl-name:hover { color: #0e8a5f; }
-  .rl-name:hover svg { fill: #0e8a5f; }
-  .sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .nav-link:hover { color: #10181f !important; }
+  .cta-green:hover { background: #0a6b4a !important; }
+  .cta-outline:hover { border-color: #10181f !important; }
+  .cta-mint:hover { background: #4ad9a0 !important; }
+  /* media queries cannot be expressed inline · mobile stacks the step rail */
+  @media (max-width: 760px) {
+    [data-rail-grid] { grid-template-columns: 1fr !important; }
+    [data-rail] { position: static !important; flex-direction: row !important; overflow-x: auto !important; gap: 0 !important; }
+    [data-rail] > div { border-left: 0 !important; border-bottom: 2px solid; padding: 10px 16px 10px 0 !important; flex: none; }
+  }
 </style>
 </head>
 <body>
 
 <div style="min-width: 320px">
 
-<!-- NAV -->
-<nav style="position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(20px, 5vw, 56px); background: rgba(245,247,249,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8ee">
+<nav style="position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px clamp(20px, 5vw, 56px); background: rgba(245,247,249,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8ee">
   <a href="#top" style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; color: #10181f">realloop<span style="color: #0e8a5f">.</span></a>
   <div style="display: flex; align-items: center; gap: clamp(10px, 3vw, 28px)">
-    <a class="rl-navlink" href="https://marketplace.realloop.in" style="font-size: 14px; font-weight: 500; color: #6b7885; padding: 10px 0; min-height: 44px; display: inline-flex; align-items: center">Become a reviewer</a>
-    <a class="rl-navlink" href="https://portal.realloop.in/portal/login?next=/portal/agents" style="font-size: 14px; font-weight: 500; color: #6b7885; padding: 10px 0; min-height: 44px; display: inline-flex; align-items: center">Log in</a>
-    <a class="rl-cta" target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="font-size: 14px; font-weight: 600; color: #fff; background: #0e8a5f; padding: 11px 18px; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center">Start a use case</a>
+    <a class="nav-link" href="#reviewers" style="font-size: 14px; font-weight: 500; color: #6b7885; min-height: 44px; display: inline-flex; align-items: center">Become a reviewer</a>
+    <a class="nav-link" href="https://portal.realloop.in/portal/login?next=/portal/agents" style="font-size: 14px; font-weight: 500; color: #6b7885; min-height: 44px; display: inline-flex; align-items: center">Log in</a>
+    <a class="cta-green" target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="font-size: 14px; font-weight: 600; color: #fff; background: #0e8a5f; padding: 11px 18px; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center">Put humans on it</a>
   </div>
 </nav>
 
-<!-- HERO -->
-<header id="top" style="padding: clamp(56px, 10vw, 120px) clamp(20px, 5vw, 56px) clamp(40px, 6vw, 72px); max-width: 1060px; margin: 0 auto">
-  <p style="margin: 0 0 22px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #0e8a5f; font-weight: 500">Marketplace for credible human judgment</p>
-  <h1 style="margin: 0 0 26px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(34px, 5.6vw, 62px); line-height: 1.08; letter-spacing: -0.02em; max-width: 15ch; text-wrap: pretty">Every AI in production eventually needs a real human.</h1>
-  <p style="margin: 0 0 36px; font-size: clamp(16px, 2vw, 19px); line-height: 1.65; color: #3d4a56; max-width: 58ch; text-wrap: pretty">To judge whether it is actually good, to teach it what good looks like, or to do what it still cannot. RealLoop puts a screened, trained panel of reviewers on your problem in days · and measures how much that panel can be trusted, on every batch, published back to you.</p>
-  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px">
-    <a class="rl-cta" target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="font-size: 16px; font-weight: 600; color: #fff; background: #0e8a5f; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Start a use case</a>
-    <a class="rl-cta-ghost" href="https://marketplace.realloop.in" style="font-size: 16px; font-weight: 600; color: #10181f; background: #fff; border: 1px solid #e2e8ee; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Become a reviewer</a>
+<header id="top" style="max-width: 1100px; margin: 0 auto; padding: clamp(52px, 8vw, 100px) clamp(20px, 5vw, 56px) clamp(44px, 6vw, 72px); display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: clamp(32px, 5vw, 56px); align-items: center">
+  <div>
+    <h1 data-reveal="1" style="margin: 0 0 32px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(33px, 4.6vw, 54px); line-height: 1.07; letter-spacing: -0.02em; max-width: 17ch; text-wrap: pretty">The human layer to enable high quality AI deployment</h1>
+    <div data-reveal="1" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <a class="cta-green" target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="font-size: 16px; font-weight: 600; color: #fff; background: #0e8a5f; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Get Started</a>
+      <a class="cta-outline" href="#reviewers" style="font-size: 16px; font-weight: 600; color: #10181f; background: #fff; border: 1px solid #e2e8ee; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Join as a reviewer</a>
+    </div>
+    <p data-reveal="1" style="margin: 16px 0 0; font-size: 14px; color: #6b7885">Nothing is created until you choose to start.</p>
   </div>
-  <p style="margin: 18px 0 0; font-size: 14px; color: #6b7885">Describe your problem in plain language. Nothing is created until you choose to start.</p>
+
+  <div data-reveal="1" style="background: #fff; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(18px, 2.4vw, 24px); box-shadow: 0 18px 44px rgba(16,24,31,0.08)">
+    <p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Where do you need human help with your AI agent?</p>
+    <div style="border-left: 2px solid #e2e8ee; padding-left: 14px; margin-bottom: 22px; min-height: 5.6em">
+      <p id="hero-typing" style="display: block; margin: 0; font-size: 15px; line-height: 1.55; color: #10181f"><span id="hero-typed"></span><span style="color: #0e8a5f">|</span></p>
+      <p id="hero-prompt" style="display: none; margin: 0; font-size: 15px; line-height: 1.55; color: #10181f">Our voice agent calls users who abandoned carts in Hindi or English. We keep hearing that <span id="hero-mark1" style="padding-bottom: 2px; border-bottom: 2px solid; border-color: transparent; transition: border-color .4s ease">confirmations are wrong</span> and <span id="hero-mark2" style="padding-bottom: 2px; border-bottom: 2px solid; border-color: transparent; transition: border-color .4s ease">discount amounts are wrongly captured</span>.</p>
+    </div>
+    <p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">What we put humans on</p>
+    <div style="display: flex; flex-direction: column; gap: 12px; min-height: 118px">
+      <div id="hero-chip1" style="opacity: 0; transform: translateX(-18px); transition: opacity .45s ease, transform .45s ease; display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: #fff; background: #0e8a5f; border-radius: 999px; padding: 9px 16px; white-space: nowrap; flex: none">Transcription accuracy</span>
+        <span style="font-size: 14px; line-height: 1.45; color: #6b7885; flex: 1 1 180px">so a yes that was a no stops counting as a confirmation</span>
+      </div>
+      <div id="hero-chip2" style="opacity: 0; transform: translateX(-18px); transition: opacity .45s ease, transform .45s ease; display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+        <span style="font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: #fff; background: #7c5cbf; border-radius: 999px; padding: 9px 16px; white-space: nowrap; flex: none">Number capture</span>
+        <span style="font-size: 14px; line-height: 1.45; color: #6b7885; flex: 1 1 180px">so the discount that reaches your system is the one agreed on the call</span>
+      </div>
+    </div>
+  </div>
 </header>
 
-<!-- HERO SHOT · the engine reading a use case back -->
-<section style="max-width: 1060px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 56px) clamp(48px, 7vw, 80px)">
-  <div class="shot">
-    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="addr">portal.realloop.in/portal/new-use-case</span></div>
-    <img src="/screens/use-case.png" alt="The RealLoop portal reading a client's description back as a set of checks, each with the reason it was picked quoted from the client's own words, the volume, and a price." loading="lazy">
-  </div>
-  <p class="cap">You write three or four sentences. We come back with the checks we would run, the phrase in your own words that made us pick each one, what a human does versus what a machine judges, and the price. Nothing is created until you start it.</p>
-</section>
+<section id="how" style="border-top: 1px solid #e2e8ee; background: #fff">
+  <div style="max-width: 1100px; margin: 0 auto; padding: clamp(44px, 6vw, 80px) clamp(20px, 5vw, 56px)">
+    <p data-reveal="1" style="margin: 0 0 14px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #0e8a5f; font-weight: 500">How it works</p>
+    <h2 data-reveal="1" style="margin: 0 0 clamp(28px, 4vw, 44px); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(25px, 3.2vw, 38px); letter-spacing: -0.02em; max-width: 22ch; line-height: 1.12; text-wrap: pretty">Describe your use-case in plain English. <br>We setup the human pipeline to enable it in days.</h2>
 
-<!-- THE WALL -->
-<section style="border-top: 1px solid #e2e8ee; background: #fff">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em">The wall every team hits</h2>
-    <p style="margin: 0 0 40px; font-size: 16px; line-height: 1.6; color: #6b7885; max-width: 62ch">The usual ways of getting human judgment onto a production AI all fail in the same place.</p>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px">
-      <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <h3 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600">Internal bandwidth</h3>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3d4a56">Works at low volume. Stops scaling the moment the product does.</p>
-      </div>
-      <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <h3 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600">Hiring a workforce</h3>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3d4a56">Slow and hard. And once hired, making ordinary people fast and accurate at judgment work is its own unsolved problem.</p>
-      </div>
-      <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <h3 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 600">LLM judges alone</h3>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3d4a56">Scale infinitely, but their output cannot be trusted on its own · and some things they cannot judge at all.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- THE INSIGHT -->
-<section style="border-top: 1px solid #e2e8ee">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em; max-width: 24ch; text-wrap: pretty">Quality at scale is a workflow problem, not a hiring problem</h2>
-    <p style="margin: 0 0 40px; font-size: 16px; line-height: 1.65; color: #3d4a56; max-width: 64ch; text-wrap: pretty">Agencies scale headcount but cannot hold quality. LLM judges scale but cannot be trusted. RealLoop breaks a fuzzy judgment into objective sub-tasks an ordinary reviewer can execute accurately, screens and trains reviewers against those exact sub-tasks, and calibrates machine judges for the rest. That is what makes quality affordable · and affordable quality is what makes the market servable.</p>
-    <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(20px, 3vw, 32px)">
-      <p style="margin: 0 0 18px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7885">One fuzzy question, decomposed</p>
-      <p style="margin: 0 0 20px; font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600">"Are my agent's order confirmation calls actually going well?"</p>
-      <div style="display: flex; flex-direction: column; gap: 10px">
-        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 16px; background: #f5f7f9; border-radius: 10px">
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #0e8a5f; background: rgba(14,138,95,0.1); padding: 4px 9px; border-radius: 999px">Human</span>
-          <span style="font-size: 15px; color: #10181f">Does the transcript match what the customer actually said?</span>
+    <div data-reveal="1" data-rail-grid="1" style="display: grid; grid-template-columns: minmax(190px, 250px) minmax(0, 1fr); gap: clamp(24px, 5vw, 56px); align-items: start">
+      <div data-rail="1" style="display: flex; flex-direction: column; gap: 4px; position: sticky; top: 84px">
+        <div class="rail-item" data-rail-group="how" data-target="step-1" role="button" tabindex="0" style="border-left: 2px solid; border-color: #0e8a5f; padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Step 01</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #0e8a5f">You describe it</p>
         </div>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 16px; background: #f5f7f9; border-radius: 10px">
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #0e8a5f; background: rgba(14,138,95,0.1); padding: 4px 9px; border-radius: 999px">Human</span>
-          <span style="font-size: 15px; color: #10181f">Was every amount and quantity captured correctly?</span>
+        <div class="rail-item" data-rail-group="how" data-target="step-2" role="button" tabindex="0" style="border-left: 2px solid; border-color: #e2e8ee; padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Step 02</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #10181f">We break it into sub-tasks</p>
         </div>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 16px; background: #f5f7f9; border-radius: 10px">
-          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #7c5cbf; background: rgba(124,92,191,0.1); padding: 4px 9px; border-radius: 999px">Machine judged</span>
-          <span style="font-size: 15px; color: #10181f">Did the agent quote a delivery window that matches policy? <span style="color: #6b7885">· calibrated against the human panel</span></span>
+        <div class="rail-item" data-rail-group="how" data-target="step-3" role="button" tabindex="0" style="border-left: 2px solid; border-color: #e2e8ee; padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Step 03</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #10181f">We build the workflow</p>
+        </div>
+        <div class="rail-item" data-rail-group="how" data-target="step-4" role="button" tabindex="0" style="border-left: 2px solid; border-color: #e2e8ee; padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Step 04</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #10181f">We publish the insights&nbsp;</p>
         </div>
       </div>
-      <div style="margin-top: 24px; border-top: 1px solid #e2e8ee; padding-top: 22px">
-        <p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7885">Why the human checks are load-bearing</p>
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; line-height: 1.7">
-          <p style="margin: 0 0 6px; color: #6b7885">Transcript: <span style="color: #10181f">"हां जी"</span> <span style="color: #6b7885">· yes</span></p>
-          <p style="margin: 0; color: #6b7885">Customer said: <span style="color: #10181f">"नहीं नहीं अभी तोह नहीं चाहिए"</span> <span style="color: #0e8a5f">· no, not right now.</span></p>
+
+      <div style="display: flex; flex-direction: column; gap: clamp(32px, 4vw, 48px)">
+        <div id="step-1" data-step="1">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em">You describe it</h3>
+          <p style="margin: 0 0 18px; font-size: 15px; line-height: 1.6; color: #6b7885; max-width: 58ch">Explain your use-case and what you need humans to solve as a simple English prompt&nbsp;</p>
+          <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(18px, 2.4vw, 26px)">
+            <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 10px; padding: 16px 18px">
+              <p style="margin: 0 0 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Your words</p>
+              <p style="margin: 0; font-size: 15px; line-height: 1.6">Our voice agent calls users who abandoned carts in Hindi or English. We keep hearing that confirmations are wrong and discount amounts are wrongly captured.<span style="color: #0e8a5f">|</span></p>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6b7885; background: #fff; border: 1px solid #e2e8ee; padding: 7px 11px; border-radius: 999px">Hindi · English</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6b7885; background: #fff; border: 1px solid #e2e8ee; padding: 7px 11px; border-radius: 999px">your production calls</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6b7885; background: #fff; border: 1px solid #e2e8ee; padding: 7px 11px; border-radius: 999px">no commitment</span>
+            </div>
+          </div>
         </div>
-        <p style="margin: 14px 0 0; font-size: 14px; color: #6b7885; max-width: 58ch">A yes that was a no, on a call whose only job was to confirm the order. The transcript read as agreement. A reviewer heard the refusal.</p>
+
+        <div id="step-2" data-step="2" style="border-top: 1px solid #e2e8ee; padding-top: clamp(28px, 4vw, 40px)">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em">We break it into sub-tasks</h3>
+          <p style="margin: 0 0 18px; font-size: 15px; line-height: 1.6; color: #6b7885; max-width: 58ch">Judgement task is broken into objective sub-tasks an ordinary reviewer can execute accurately</p>
+          <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(18px, 2.4vw, 26px)">
+            <p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Transcription accuracy</p>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: #fff; background: #0e8a5f; border-radius: 999px; padding: 8px 15px; white-space: nowrap; flex: none">Transcript vs audio</span>
+                <span style="font-size: 14px; line-height: 1.45; color: #6b7885; flex: 1 1 180px">reviewer hears the call and marks every line the AI got wrong</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: #fff; background: #0e8a5f; border-radius: 999px; padding: 8px 15px; white-space: nowrap; flex: none">Confirmation obtained</span>
+                <span style="font-size: 14px; line-height: 1.45; color: #6b7885; flex: 1 1 180px">agreement actually given, not assumed from a filler word</span>
+              </div>
+            </div>
+            <p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Number capture</p>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: #fff; background: #7c5cbf; border-radius: 999px; padding: 8px 15px; white-space: nowrap; flex: none">Discount amount</span>
+                <span style="font-size: 14px; line-height: 1.45; color: #6b7885; flex: 1 1 180px">the figure logged matches the one agreed out loud</span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; color: #fff; background: #7c5cbf; border-radius: 999px; padding: 8px 15px; white-space: nowrap; flex: none">Quantity and total</span>
+                <span style="font-size: 14px; line-height: 1.45; color: #6b7885; flex: 1 1 180px">every amount and count on the call captured correctly</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-3" data-step="3" style="border-top: 1px solid #e2e8ee; padding-top: clamp(28px, 4vw, 40px)">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em">We build the workflow</h3>
+          <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: #6b7885; max-width: 58ch">Two things get built for every use case: a screen that narrows the marketplace down to reviewers who can do your exact sub-tasks, and the interface they log judgment in.</p>
+          <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(18px, 2.4vw, 26px); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: clamp(20px, 3vw, 32px); align-items: start">
+            <div>
+              <p style="margin: 0 0 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Tooling we generate</p>
+              <div style="display: flex; flex-direction: column; gap: 14px">
+                <div>
+                  <p style="margin: 0 0 4px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.01em">Screening</p>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #6b7885">Built for relevant task screening for defined use-case and&nbsp; capture speed.&nbsp;</p>
+                </div>
+                <div>
+                  <p style="margin: 0 0 4px; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.01em">Logging</p>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #6b7885">Built to cover all nuances needed to be captured relevant to task defined.&nbsp;</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display: inline-flex; gap: 4px; background: #eef2f6; border-radius: 999px; padding: 4px; margin-bottom: 12px">
+                <span id="tab-screen" role="button" tabindex="0" style="cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 13px; border-radius: 999px; background: #10181f; color: #ffffff">Screening</span>
+                <span id="tab-log" role="button" tabindex="0" style="cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 13px; border-radius: 999px; background: transparent; color: #6b7885">Logging</span>
+              </div>
+              <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 10px; padding: 14px 16px; box-shadow: 0 10px 26px rgba(16,24,31,0.06)">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px">
+                  <span style="width: 30px; height: 30px; border-radius: 999px; background: rgba(14,138,95,0.12); color: #0e8a5f; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; flex: none">▶</span>
+                  <span style="display: flex; align-items: flex-end; gap: 3px; height: 22px; flex: 1">
+                    <i style="display: block; width: 3px; height: 45%; background: #dfe6ed"></i>
+                    <i style="display: block; width: 3px; height: 80%; background: #dfe6ed"></i>
+                    <i style="display: block; width: 3px; height: 55%; background: #dfe6ed"></i>
+                    <i style="display: block; width: 3px; height: 95%; background: #0e8a5f"></i>
+                    <i style="display: block; width: 3px; height: 60%; background: #dfe6ed"></i>
+                    <i style="display: block; width: 3px; height: 35%; background: #dfe6ed"></i>
+                    <i style="display: block; width: 3px; height: 75%; background: #dfe6ed"></i>
+                    <i style="display: block; width: 3px; height: 50%; background: #dfe6ed"></i>
+                  </span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #93a1ae; flex: none">0:07</span>
+                </div>
+                <div id="tool-screen" style="display: block">
+                  <p style="margin: 0 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Did the customer agree?</p>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px">
+                    <div style="display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8ee; border-radius: 10px; padding: 16px 10px; font-size: 15px; font-weight: 600; color: #6b7885; min-height: 52px">Yes</div>
+                    <div style="display: flex; align-items: center; justify-content: center; background: rgba(14,138,95,0.1); border: 1px solid rgba(14,138,95,0.3); border-radius: 10px; padding: 16px 10px; font-size: 15px; font-weight: 600; color: #0a6b4a; min-height: 52px">No</div>
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+                    <span style="display: flex; gap: 4px">
+                      <i style="display: block; width: 18px; height: 4px; border-radius: 999px; background: #0e8a5f"></i>
+                      <i style="display: block; width: 18px; height: 4px; border-radius: 999px; background: #0e8a5f"></i>
+                      <i style="display: block; width: 18px; height: 4px; border-radius: 999px; background: #0e8a5f"></i>
+                      <i style="display: block; width: 18px; height: 4px; border-radius: 999px; background: #dfe6ed"></i>
+                      <i style="display: block; width: 18px; height: 4px; border-radius: 999px; background: #dfe6ed"></i>
+                    </span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: #93a1ae">One tap, next clip</span>
+                  </div>
+                </div>
+                <div id="tool-log" style="display: none">
+                  <p style="margin: 0 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Line the AI heard</p>
+                  <p style="margin: 0 0 4px; font-family: 'IBM Plex Mono', monospace; font-size: 14px">हां जी</p>
+                  <p style="margin: 0 0 12px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #6b7885">yes</p>
+                  <p style="margin: 0 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">What the customer said</p>
+                  <div style="border: 1px solid #0e8a5f; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; min-height: 44px">
+                    <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 14px; line-height: 1.5"><span id="translit-text"></span><span style="color: #0e8a5f">|</span></p>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px">
+                    <span id="toggle-en" role="button" tabindex="0" style="cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; color: #0e8a5f; background: transparent; border: 1px solid rgba(14,138,95,0.35); border-radius: 999px; padding: 7px 12px; min-height: 32px; display: inline-flex; align-items: center">Show English</span>
+                    <span id="gloss-en" style="display: none; font-size: 13px; color: #6b7885">no no, I do not want it right now</span>
+                  </div>
+                  <p style="margin: 0 0 6px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Discount agreed on the call</p>
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid #e2e8ee; border-radius: 8px; padding: 10px 12px">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px">15<span style="color: #93a1ae">%</span></span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #7c5cbf">logged 10%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-4" data-step="4" style="border-top: 1px solid #e2e8ee; padding-top: clamp(28px, 4vw, 40px)">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em">We publish the insights</h3>
+          <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: #6b7885; max-width: 58ch">Findings on defined tasks along with reliability score of the human layer so that you can trust it</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px">
+            <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(18px, 2.4vw, 24px)">
+              <p style="margin: 0 0 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Findings · 400 calls</p>
+              <div style="display: flex; flex-direction: column; gap: 16px">
+                <div>
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px">
+                    <span style="font-size: 14px; color: #3d4a56">Confirmation wrongly logged</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; color: #10181f">18%</span>
+                  </div>
+                  <div style="height: 6px; border-radius: 999px; background: #e2e8ee; overflow: hidden"><i style="display: block; width: 18%; height: 100%; background: #0e8a5f"></i></div>
+                </div>
+                <div>
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px">
+                    <span style="font-size: 14px; color: #3d4a56">Discount amount mismatch</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; color: #10181f">11%</span>
+                  </div>
+                  <div style="height: 6px; border-radius: 999px; background: #e2e8ee; overflow: hidden"><i style="display: block; width: 11%; height: 100%; background: #0e8a5f"></i></div>
+                </div>
+                <div>
+                  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px">
+                    <span style="font-size: 14px; color: #3d4a56">Transcript errors per call</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; color: #10181f">1.4</span>
+                  </div>
+                  <div style="height: 6px; border-radius: 999px; background: #e2e8ee; overflow: hidden"><i style="display: block; width: 46%; height: 100%; background: #0e8a5f"></i></div>
+                </div>
+              </div>
+              <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #e2e8ee">
+                <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Most common error</p>
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.7">
+                  <p style="margin: 0 0 4px; color: #6b7885">Heard <span style="color: #10181f">"हां जी"</span> · yes</p>
+                  <p style="margin: 0; color: #6b7885">Said <span style="color: #10181f">"नहीं नहीं अभी तोह नहीं चाहिए"</span> <span style="color: #0e8a5f">· no, I do not want it right now</span></p>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #f5f7f9; border: 1px solid #e2e8ee; border-radius: 14px; padding: clamp(18px, 2.4vw, 24px)">
+              <p style="margin: 0 0 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #93a1ae">Panel reliability · same batch</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
+                <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 10px; padding: 14px 16px">
+                  <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.8vw, 30px); font-weight: 600; color: #0e8a5f">94%</p>
+                  <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: #6b7885">reviewers agreeing with each other</p>
+                </div>
+                <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 10px; padding: 14px 16px">
+                  <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: clamp(22px, 2.8vw, 30px); font-weight: 600; color: #0e8a5f">91%</p>
+                  <p style="margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: #6b7885">match with the hidden expert</p>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #fff; border: 1px solid #e2e8ee; border-radius: 8px; padding: 10px 13px">
+                  <span style="font-size: 13.5px; color: #3d4a56">Expert-rated calls seeded</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">1 in 20</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #fff; border: 1px solid #e2e8ee; border-radius: 8px; padding: 10px 13px">
+                  <span style="font-size: 13.5px; color: #3d4a56">Calls double-reviewed</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">1 in 5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- AFTER THE REQUEST · what happens with a confirmed use case -->
-<section id="how" style="border-top: 1px solid #e2e8ee">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <p style="margin: 0 0 18px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #0e8a5f; font-weight: 500">After you say start</p>
-    <h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em">What happens with your request</h2>
-    <p style="margin: 0 0 40px; font-size: 16px; line-height: 1.6; color: #6b7885; max-width: 62ch">The reviewers already exist · the marketplace keeps them screened and ready. Your use case goes through two stages, each one measurable.</p>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px">
-      <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0e8a5f; font-weight: 600">Stage 1</p>
-        <h3 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600">Screening and training</h3>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3d4a56">We break your problem into objective sub-tasks and match reviewers whose languages and skills fit your calls. They are screened again on those exact sub-tasks, using your real production data, and trained with instant feedback until they hit the bar.</p>
-      </div>
-      <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #0e8a5f; font-weight: 600">Stage 2</p>
-        <h3 style="margin: 0 0 10px; font-family: 'Space Grotesk', sans-serif; font-size: 19px; font-weight: 600">Judgment logging</h3>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #3d4a56">The panel goes live on your calls, logging judgments in an interface generated for your checks · with the panel's reliability measured and published to you on every batch.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- INSIGHT GENERATION · real screen -->
-<section style="border-top: 1px solid #e2e8ee; background: #fff">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em">What you get back</h2>
-    <p style="margin: 0 0 32px; font-size: 16px; line-height: 1.6; color: #6b7885; max-width: 62ch">Not a spreadsheet of flags. The agent ranked by how much it needs attention, the one root cause to fix first, and every finding as a line you can play.</p>
-    <div class="shot">
-      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="addr">portal.realloop.in/portal/agents</span></div>
-      <img src="/screens/insights.png" alt="Agent insights: agents ranked by how much they need attention, a root-cause verdict, and a list of transcript lines against what the customer actually said, each playable." loading="lazy">
-    </div>
-    <p class="cap">Every row is the transcript against what the customer actually said, with the audio behind it. This is the one thing a machine judge scoring a transcript can never catch · it is scoring the same audio it already misheard.</p>
-  </div>
-</section>
-
-<!-- RELIABILITY · real screen -->
-<section style="border-top: 1px solid #e2e8ee">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em; max-width: 26ch; text-wrap: pretty">And how much to trust it, published</h2>
-    <p style="margin: 0 0 32px; font-size: 16px; line-height: 1.6; color: #3d4a56; max-width: 64ch">Expert-rated calls stay seeded in every batch, unmarked. We measure how often reviewers agree with each other and how often they match that hidden expert, per agent, and show you the number next to the findings it produced. Most vendors cannot tell you their reliability. It is a tab in ours.</p>
-    <div class="shot">
-      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="addr">portal.realloop.in/portal/reliability</span></div>
-      <img src="/screens/reliability.png" alt="The reliability tab: inter-panel agreement and agreement against a hidden expert, per agent, with the method for each activity spelled out." loading="lazy">
-    </div>
-  </div>
-</section>
-
-<!-- FOR REVIEWERS -->
 <section id="reviewers" style="border-top: 1px solid #e2e8ee; background: #10181f; color: #f5f7f9">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <p style="margin: 0 0 18px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #35c98f; font-weight: 500">For reviewers</p>
-    <h2 style="margin: 0 0 18px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(26px, 3.6vw, 38px); letter-spacing: -0.015em; max-width: 20ch; text-wrap: pretty">Skilled judgment work. Paid. From your phone.</h2>
-    <p style="margin: 0 0 36px; font-size: 16px; line-height: 1.65; color: #b9c4cd; max-width: 58ch; text-wrap: pretty">This is not data entry. You listen to real production calls and judge what actually happened · work that AI companies depend on. We train you on the exact task before you grade a single call, and keep coaching you as you work.</p>
+  <div style="max-width: 1100px; margin: 0 auto; padding: clamp(44px, 6vw, 80px) clamp(20px, 5vw, 56px)">
+    <p data-reveal="1" style="margin: 0 0 14px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #35c98f; font-weight: 500">For reviewers</p>
+    <h2 data-reveal="1" style="margin: 0 0 clamp(28px, 4vw, 44px); font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(25px, 3.2vw, 38px); letter-spacing: -0.02em; max-width: 20ch; line-height: 1.12; text-wrap: pretty">Skilled judgment work. Paid. From your phone.</h2>
 
-    <div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: clamp(24px, 5vw, 48px); margin-bottom: 36px">
-      <div class="phone"><img src="/screens/training-mobile.png" alt="The reviewer training screen on a phone: play the clip, the line the AI heard, and one decision to make about whether it matches." loading="lazy"></div>
-      <div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 16px">
-        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 20px">
-          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: #fff">One decision at a time</h3>
-          <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #b9c4cd">Play a clip, read the line the AI heard, say whether it matches. The fuzzy judgment has already been broken down for you · that is what makes ordinary people accurate at it.</p>
+    <div data-reveal="1" data-rail-grid="1" style="display: grid; grid-template-columns: minmax(190px, 250px) minmax(0, 1fr); gap: clamp(24px, 5vw, 56px); align-items: start">
+      <div data-rail="1" style="display: flex; flex-direction: column; gap: 4px; position: sticky; top: 84px">
+        <div class="rail-item" data-rail-group="rev" data-target="rstep-1" role="button" tabindex="0" style="border-left: 2px solid; border-color: #35c98f; padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6f7d89">Step 01</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #35c98f">Get in with a task</p>
         </div>
-        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 20px">
-          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: #fff">A task, not a CV</h3>
-          <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #b9c4cd">Getting in is a short assignment on real call audio you can do right now, with instant feedback on every clip telling you why you were right or wrong.</p>
+        <div class="rail-item" data-rail-group="rev" data-target="rstep-2" role="button" tabindex="0" style="border-left: 2px solid; border-color: rgba(255,255,255,0.16); padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6f7d89">Step 02</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #ffffff">Get trained</p>
         </div>
-        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 20px">
-          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; color: #fff">Phone-first, in your languages</h3>
-          <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #b9c4cd">Screening, training and daily work all run on a phone. Hindi and Hinglish calls today. Your agreement with our experts decides your tier and your rate.</p>
+        <div class="rail-item" data-rail-group="rev" data-target="rstep-3" role="button" tabindex="0" style="border-left: 2px solid; border-color: rgba(255,255,255,0.16); padding: 12px 0 12px 16px; cursor: pointer; min-height: 44px">
+          <p style="margin: 0 0 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6f7d89">Step 03</p>
+          <p class="rail-title" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #ffffff">Work and get paid</p>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: clamp(28px, 4vw, 40px)">
+        <div id="rstep-1">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em; color: #fff">A task, not a CV</h3>
+          <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #b9c4cd; max-width: 46ch">No resume, no interview. A short form, then a 2-minute assignment on real calls.</p>
+          <div style="background: #0b1116; border: 9px solid #2b343d; border-radius: 40px; padding: 6px; width: 320px; max-width: 100%; box-shadow: 0 22px 50px rgba(0,0,0,0.35)">
+            <img loading="lazy" src="screens/reviewer-apply.png" alt="The reviewer application: full name, languages you speak, education, state, hours per week and phone, with an apply button that says your assignment is ready." style="display: block; width: 100%; height: auto; border-radius: 32px">
+          </div>
+        </div>
+
+        <div id="rstep-2" style="border-top: 1px solid rgba(255,255,255,0.12); padding-top: clamp(24px, 3.5vw, 36px)">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em; color: #fff">One decision at a time</h3>
+          <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #b9c4cd; max-width: 46ch">One clip, one decision. Feedback after every answer tells you why you were right or wrong.</p>
+          <div style="background: #0b1116; border: 9px solid #2b343d; border-radius: 40px; padding: 6px; width: 320px; max-width: 100%; box-shadow: 0 22px 50px rgba(0,0,0,0.35)">
+            <img loading="lazy" src="screens/reviewer-assignment.png" alt="The 7-question assignment: two transcription checks and five listen-and-judge questions on real production calls, each openable." style="display: block; width: 100%; height: auto; border-radius: 32px">
+          </div>
+        </div>
+
+        <div id="rstep-3" style="border-top: 1px solid rgba(255,255,255,0.12); padding-top: clamp(24px, 3.5vw, 36px)">
+          <h3 style="margin: 0 0 8px; font-family: 'Space Grotesk', sans-serif; font-size: clamp(19px, 2.2vw, 23px); font-weight: 600; letter-spacing: -0.015em; color: #fff">Work from your phone, get paid</h3>
+          <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: #b9c4cd; max-width: 46ch">Work when you want, from a phone. Your agreement score sets your tier and your rate. Payouts weekly, by UPI.</p>
+          <div style="background: #0b1116; border: 9px solid #2b343d; border-radius: 40px; padding: 6px; width: 320px; max-width: 100%; box-shadow: 0 22px 50px rgba(0,0,0,0.35)">
+            <img loading="lazy" src="screens/reviewer-roles-rates.png" alt="The reviewer home screen: tier rates of 300 and 500 rupees an hour, top reviewers making 2,000+ a day paid weekly, and the work on offer with a rate against each role." style="display: block; width: 100%; height: auto; border-radius: 32px">
+          </div>
         </div>
       </div>
     </div>
 
-    <a class="rl-cta-mint" href="https://marketplace.realloop.in" style="font-size: 16px; font-weight: 600; color: #10181f; background: #35c98f; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Start the screening task</a>
-    <p style="margin: 14px 0 0; font-size: 14px; color: #8e9aa5">Pick your languages, then grade real production calls. About 20 minutes.</p>
+    <a class="cta-mint" data-reveal="1" href="https://marketplace.realloop.in" style="margin-top: clamp(28px, 4vw, 44px); font-size: 16px; font-weight: 600; color: #10181f; background: #35c98f; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Start the screening task</a>
   </div>
 </section>
 
-<!-- TRACTION -->
-<section style="border-top: 1px solid #e2e8ee">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <h2 style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em">Running today</h2>
-    <p style="margin: 0 0 36px; font-size: 16px; line-height: 1.6; color: #6b7885; max-width: 62ch">Voice AI is the first working version of the engine, not the definition. The first text use case is already in pilot.</p>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 36px">
-      <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7885">Pilot · voice</p>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #10181f">A YC voice-AI orchestration company · four-week evaluation pilot, closed.</p>
-      </div>
-      <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7885">Pilot · voice + human calls</p>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #10181f">A Series A consumer fintech · voice-agent and human collections calls.</p>
-      </div>
-      <div style="background: #fff; border: 1px solid #e2e8ee; border-radius: 12px; padding: 24px">
-        <p style="margin: 0 0 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #6b7885">Pilot · text</p>
-        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #10181f">A Series A browser co-pilot · the first text use case.</p>
-      </div>
-    </div>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px">
-      <div>
-        <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: clamp(24px, 3vw, 32px); font-weight: 600; color: #10181f">10 → 50</p>
-        <p style="margin: 4px 0 0; font-size: 14px; color: #6b7885">full-time reviewers, scaling with pilot volume</p>
-      </div>
-      <div>
-        <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: clamp(24px, 3vw, 32px); font-weight: 600; color: #10181f">~200 hrs</p>
-        <p style="margin: 4px 0 0; font-size: 14px; color: #6b7885">of production calls reviewed</p>
-      </div>
-      <div>
-        <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: clamp(24px, 3vw, 32px); font-weight: 600; color: #10181f">~200 hrs</p>
-        <p style="margin: 4px 0 0; font-size: 14px; color: #6b7885">of transcription data created</p>
-      </div>
-      <div>
-        <p style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: clamp(24px, 3vw, 32px); font-weight: 600; color: #10181f">HI · EN</p>
-        <p style="margin: 4px 0 0; font-size: 14px; color: #6b7885">Hindi and Hinglish production calls today</p>
-      </div>
+<section id="contact" style="border-top: 1px solid #e2e8ee; background: #fff">
+  <div style="max-width: 1100px; margin: 0 auto; padding: clamp(44px, 6vw, 76px) clamp(20px, 5vw, 56px)">
+    <p data-reveal="1" style="margin: 0 0 14px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #0e8a5f; font-weight: 500">Contact</p>
+    <h2 data-reveal="1" style="margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(25px, 3.2vw, 38px); letter-spacing: -0.02em; max-width: 22ch; line-height: 1.12; text-wrap: pretty">Tell us where your AI needs a human.</h2>
+    <p data-reveal="1" style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #6b7885; max-width: 52ch">A few sentences is enough. We read every one and reply ourselves.</p>
+    <div data-reveal="1" style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px">
+      <a class="cta-green" href="mailto:manavi@realloop.in?subject=Human%20help%20for%20our%20AI%20agent" style="font-size: 16px; font-weight: 600; color: #fff; background: #0e8a5f; padding: 15px 26px; border-radius: 10px; display: inline-flex; align-items: center; min-height: 48px">Email us</a>
+      <a class="nav-link" href="mailto:manavi@realloop.in" style="font-family: 'IBM Plex Mono', monospace; font-size: 15px; color: #6b7885; min-height: 44px; display: inline-flex; align-items: center">manavi@realloop.in</a>
     </div>
   </div>
 </section>
 
-<!-- TEAM -->
-<section style="border-top: 1px solid #e2e8ee; background: #fff">
-  <div style="max-width: 1060px; margin: 0 auto; padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 56px)">
-    <h2 style="margin: 0 0 24px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: clamp(24px, 3.2vw, 34px); letter-spacing: -0.015em">Team</h2>
-    <div style="display: flex; flex-wrap: wrap; gap: clamp(28px, 6vw, 72px)">
-      <a class="rl-name" href="https://www.linkedin.com/in/manavi-garg-867b9215b/" target="_blank" rel="noopener noreferrer">Manavi Garg<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.98 3.5A2.5 2.5 0 1 0 5 8.5a2.5 2.5 0 0 0 0-5zM3 9.75h4V21H3zM9.5 9.75h3.83v1.54h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.76V21h-4v-5.02c0-1.2-.02-2.74-1.75-2.74-1.76 0-2.03 1.3-2.03 2.65V21h-4z"/></svg><span class="sr">on LinkedIn</span></a>
-      <a class="rl-name" href="https://www.linkedin.com/in/nabhgarg/" target="_blank" rel="noopener noreferrer">Nabh Garg<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.98 3.5A2.5 2.5 0 1 0 5 8.5a2.5 2.5 0 0 0 0-5zM3 9.75h4V21H3zM9.5 9.75h3.83v1.54h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.5 4.78 5.76V21h-4v-5.02c0-1.2-.02-2.74-1.75-2.74-1.76 0-2.03 1.3-2.03 2.65V21h-4z"/></svg><span class="sr">on LinkedIn</span></a>
-    </div>
-  </div>
-</section>
-
-<!-- FOOTER -->
 <footer style="border-top: 1px solid #e2e8ee; background: #f5f7f9">
-  <div style="max-width: 1060px; margin: 0 auto; padding: 40px clamp(20px, 5vw, 56px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px">
+  <div style="max-width: 1100px; margin: 0 auto; padding: 32px clamp(20px, 5vw, 56px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px">
     <div>
       <p style="margin: 0 0 4px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px">realloop<span style="color: #0e8a5f">.</span></p>
       <p style="margin: 0; font-size: 13px; color: #6b7885">© 2026 RealLoop · Bengaluru</p>
     </div>
     <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center">
-      <a class="rl-navlink" href="https://marketplace.realloop.in" style="font-size: 14px; font-weight: 500; color: #6b7885; min-height: 44px; display: inline-flex; align-items: center">Become a reviewer</a>
-      <a target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="font-size: 14px; font-weight: 600; color: #0e8a5f; min-height: 44px; display: inline-flex; align-items: center">Start a use case</a>
+      <a class="nav-link" href="https://marketplace.realloop.in" style="font-size: 14px; font-weight: 500; color: #6b7885; min-height: 44px; display: inline-flex; align-items: center">Become a reviewer</a>
+      <a class="nav-link" href="mailto:manavi@realloop.in" style="font-size: 14px; font-weight: 500; color: #6b7885; min-height: 44px; display: inline-flex; align-items: center">manavi@realloop.in</a>
+      <a target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="font-size: 14px; font-weight: 600; color: #0e8a5f; min-height: 44px; display: inline-flex; align-items: center">Put humans on it</a>
     </div>
   </div>
 </footer>
 
 </div>
+
+<script>
+(function () {
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var PROMPT = 'Our voice agent calls users who abandoned carts in Hindi or English. We keep hearing that confirmations are wrong and discount amounts are wrongly captured.';
+  var WORDS = [['nahi', 'नहीं'], ['nahi', 'नहीं'], ['abhi', 'अभी'], ['toh', 'तोह'], ['nahi', 'नहीं'], ['chahiye', 'चाहिए']];
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---- Hero typing + theme reveal ---- */
+  var typing = $('hero-typing'), prompt = $('hero-prompt'), typed = $('hero-typed');
+  var mark1 = $('hero-mark1'), mark2 = $('hero-mark2'), chip1 = $('hero-chip1'), chip2 = $('hero-chip2');
+  var tick = null, timers = [];
+
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function resetTheme() {
+    mark1.style.borderColor = 'transparent';
+    mark2.style.borderColor = 'transparent';
+    chip1.style.opacity = '0'; chip1.style.transform = 'translateX(-18px)';
+    chip2.style.opacity = '0'; chip2.style.transform = 'translateX(-18px)';
+  }
+  function showChip(chip, mark, color) {
+    if (mark) mark.style.borderColor = color;
+    chip.style.opacity = '1'; chip.style.transform = 'none';
+  }
+  function settleTheme() {
+    showChip(chip1, mark1, '#0e8a5f');
+    showChip(chip2, mark2, '#7c5cbf');
+  }
+  function runTyping() {
+    if (tick) clearInterval(tick);
+    clearTimers();
+    resetTheme();
+    typing.style.display = 'block';
+    prompt.style.display = 'none';
+    var n = 0;
+    typed.textContent = '';
+    tick = setInterval(function () {
+      n++;
+      typed.textContent = PROMPT.slice(0, n);
+      if (n >= PROMPT.length) {
+        clearInterval(tick); tick = null;
+        typing.style.display = 'none';
+        prompt.style.display = 'block';
+        timers.push(setTimeout(function () { showChip(chip1, mark1, '#0e8a5f'); }, 420));
+        timers.push(setTimeout(function () { showChip(chip2, mark2, '#7c5cbf'); }, 900));
+        timers.push(setTimeout(runTyping, 7200));
+      }
+    }, 20);
+  }
+  if (reduced) {
+    typed.textContent = PROMPT;
+    typing.style.display = 'none';
+    prompt.style.display = 'block';
+    settleTheme();
+  } else {
+    runTyping();
+  }
+
+  /* ---- Transliteration animation (logging mock) ---- */
+  var field = $('translit-text');
+  var tWord = 0, tChar = 0, tt = null;
+  function trRender() {
+    var hindi = WORDS.slice(0, tWord).map(function (w) { return w[1]; }).join(' ');
+    var partial = (WORDS[tWord] || ['', ''])[0].slice(0, tChar);
+    field.textContent = (hindi + (partial ? ' ' + partial : '')).trim();
+  }
+  function trStep() {
+    var w = WORDS[tWord];
+    if (!w) {
+      tt = setTimeout(function () { tWord = 0; tChar = 0; trRender(); tt = setTimeout(trStep, 700); }, 4200);
+      return;
+    }
+    if (tChar < w[0].length) { tChar++; trRender(); tt = setTimeout(trStep, 150); }
+    else { tWord++; tChar = 0; trRender(); tt = setTimeout(trStep, 550); }
+  }
+  if (reduced) { tWord = WORDS.length; tChar = 0; trRender(); }
+  else { trRender(); tt = setTimeout(trStep, 700); }
+
+  /* ---- Tool tabs (screening / logging) ---- */
+  var tabScreen = $('tab-screen'), tabLog = $('tab-log'), bodyScreen = $('tool-screen'), bodyLog = $('tool-log');
+  function setTool(t) {
+    var screening = t === 'screen';
+    tabScreen.style.background = screening ? '#10181f' : 'transparent';
+    tabScreen.style.color = screening ? '#ffffff' : '#6b7885';
+    tabLog.style.background = screening ? 'transparent' : '#10181f';
+    tabLog.style.color = screening ? '#6b7885' : '#ffffff';
+    bodyScreen.style.display = screening ? 'block' : 'none';
+    bodyLog.style.display = screening ? 'none' : 'block';
+  }
+  tabScreen.addEventListener('click', function () { setTool('screen'); });
+  tabLog.addEventListener('click', function () { setTool('log'); });
+
+  /* ---- Show English toggle ---- */
+  var toggleEn = $('toggle-en'), glossEn = $('gloss-en'), showEn = false;
+  toggleEn.addEventListener('click', function () {
+    showEn = !showEn;
+    glossEn.style.display = showEn ? 'inline' : 'none';
+    toggleEn.textContent = showEn ? 'Hide English' : 'Show English';
+  });
+
+  /* ---- Scroll reveal ---- */
+  (function () {
+    var els = Array.prototype.slice.call(document.querySelectorAll('[data-reveal]'));
+    if (!els.length || typeof IntersectionObserver === 'undefined' || reduced) return;
+    var show = function (el) { el.style.opacity = '1'; el.style.transform = 'none'; };
+    var hidden = els.filter(function (el) {
+      var r = el.getBoundingClientRect();
+      el.style.transition = 'opacity .55s ease, transform .55s ease';
+      if (r.top < (window.innerHeight || 800) * 0.95) return false;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(14px)';
+      return true;
+    });
+    if (!hidden.length) return;
+    var fired = false;
+    var io = new IntersectionObserver(function (entries) {
+      fired = true;
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        show(e.target);
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+    hidden.forEach(function (el) { io.observe(el); });
+    setTimeout(function () { if (!fired) hidden.forEach(show); }, 1400);
+  })();
+
+  /* ---- Rail active state ---- */
+  var rails = {
+    how: { active: '#0e8a5f', inactiveBorder: '#e2e8ee', inactiveText: '#10181f' },
+    rev: { active: '#35c98f', inactiveBorder: 'rgba(255,255,255,0.16)', inactiveText: '#ffffff' }
+  };
+  var items = Array.prototype.slice.call(document.querySelectorAll('.rail-item'));
+  function activate(group, targetId) {
+    var cfg = rails[group];
+    items.forEach(function (it) {
+      if (it.getAttribute('data-rail-group') !== group) return;
+      var on = it.getAttribute('data-target') === targetId;
+      var title = it.querySelector('.rail-title');
+      it.style.borderColor = on ? cfg.active : cfg.inactiveBorder;
+      if (title) title.style.color = on ? cfg.active : cfg.inactiveText;
+    });
+  }
+  items.forEach(function (it) {
+    var handler = function () {
+      var el = $(it.getAttribute('data-target'));
+      if (!el) return;
+      var y = el.getBoundingClientRect().top + (window.pageYOffset || 0) - 110;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    };
+    it.addEventListener('click', handler);
+    it.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); } });
+  });
+  (function () {
+    if (typeof IntersectionObserver === 'undefined') return;
+    var map = {
+      'step-1': ['how', 'step-1'], 'step-2': ['how', 'step-2'], 'step-3': ['how', 'step-3'], 'step-4': ['how', 'step-4'],
+      'rstep-1': ['rev', 'rstep-1'], 'rstep-2': ['rev', 'rstep-2'], 'rstep-3': ['rev', 'rstep-3']
+    };
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var hit = map[e.target.id];
+        if (hit) activate(hit[0], hit[1]);
+      });
+    }, { rootMargin: '-25% 0px -55% 0px', threshold: 0 });
+    Object.keys(map).forEach(function (id) { var el = $(id); if (el) obs.observe(el); });
+  })();
+})();
+</script>
+
 </body>
 </html>
