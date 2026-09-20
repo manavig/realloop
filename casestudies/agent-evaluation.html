@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Evaluation · RealLoop</title>
+<meta name="description" content="Making voice-agent performance measurable, beyond latency and barge-in. One 'good call' broken into 15+ metrics across the STT, LLM, TTS and extraction pipeline, scored by trained humans at scale.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f5f7f9; --card:#ffffff; --ink:#10181f; --ink2:#6b7885; --ink3:#93a1ae; --line:#e2e8ee; --line2:#dfe6ed;
+  --accent:#0e8a5f; --accent-soft:#e3f4ec; --accent-bright:#35c98f;
+  --vendor:#7c5cbf; --vendor-soft:#efeaf9; --other:#b9c4cd;
+  --note:#b7791f; --note-bg:#fdf3df; --note-ink:#7a4f0e;
+  --bad:#c0392b; --bad-bg:#fbe9e7;
+  --band:#10181f; --cta-bg:#10181f;
+  --shadow:0 18px 44px rgba(16,24,31,.08);
+  --display:'Space Grotesk',sans-serif; --body:'Instrument Sans',sans-serif; --mono:'IBM Plex Mono',monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f151b; --card:#171f27; --ink:#eef2f5; --ink2:#a5b1bc; --ink3:#7b8894; --line:#2b343d; --line2:#333d47;
+    --accent:#27a874; --accent-soft:#12312a; --accent-bright:#5fe0ad;
+    --vendor:#9a80e6; --vendor-soft:#25203a; --other:#3d4a56;
+    --note:#e0a63a; --note-bg:#3a2c12; --note-ink:#f2c877;
+    --bad:#ef6b5e; --bad-bg:#3a1c18;
+    --band:#0a1015; --cta-bg:#0b1116;
+    --shadow:0 18px 44px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --card:#171f27; --ink:#eef2f5; --ink2:#a5b1bc; --ink3:#7b8894; --line:#2b343d; --line2:#333d47;
+  --accent:#27a874; --accent-soft:#12312a; --accent-bright:#5fe0ad;
+  --vendor:#9a80e6; --vendor-soft:#25203a; --other:#3d4a56;
+  --note:#e0a63a; --note-bg:#3a2c12; --note-ink:#f2c877;
+  --bad:#ef6b5e; --bad-bg:#3a1c18;
+  --band:#0a1015; --cta-bg:#0b1116;
+  --shadow:0 18px 44px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:pretty}
+p{margin:0;text-wrap:pretty}
+a{color:var(--accent);text-decoration:none}
+a:hover{color:var(--accent-bright)}
+img{max-width:100%}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(18px,4vw,28px)}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.ph{font-family:var(--mono);font-size:.86em;color:var(--note-ink);background:var(--note-bg);border:1px dashed var(--note);border-radius:5px;padding:1px 6px;white-space:nowrap}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes march{to{stroke-dashoffset:-32}}
+@media (max-width:760px){
+  #loopsvg{display:none}
+  #loopmid{position:static;transform:none;max-width:none;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){
+  #loopflow{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="page">
+
+<div class="wrap">
+  <nav style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 0;border-bottom:1px solid var(--line)">
+    <a href="https://realloop.in/" style="font-family:var(--display);font-weight:700;font-size:21px;letter-spacing:-.01em;color:var(--ink)">realloop.</a>
+    <div style="display:flex;gap:clamp(12px,2vw,20px);align-items:center;font-size:14.5px;flex-wrap:wrap">
+      <a href="/casestudies" style="color:var(--ink2)">Case studies</a>
+      <a href="https://marketplace.realloop.in" style="color:var(--ink2)">Become a reviewer</a>
+      <a href="https://portal.realloop.in/portal/login?next=/portal/agents" style="color:var(--ink2)">Log in</a>
+      <button type="button" id="themeToggle" aria-label="Switch theme" style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:999px;padding:8px 13px;cursor:pointer;min-height:36px">Dark</button>
+      <a target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="background:var(--accent);color:#fff;border-radius:999px;padding:11px 18px;font-weight:600;font-size:14.5px;min-height:40px;display:inline-flex;align-items:center">Put humans on it</a>
+    </div>
+  </nav>
+
+  <header style="padding:clamp(48px,8vw,92px) 0 clamp(34px,5vw,54px);display:grid;gap:clamp(20px,3vw,26px)">
+    <div class="eyebrow">// Case study · Voice AI · Agent evaluation</div>
+    <h1 style="font-size:clamp(36px,5.4vw,66px);line-height:1.02;font-weight:700;letter-spacing:-.032em;max-width:16ch"><em style="font-style:normal;color:var(--accent)">Making agent performance measurable</em></h1>
+    <p style="font-size:clamp(17px,2.1vw,22px);line-height:1.45;font-weight:400;color:var(--ink2);max-width:52ch;margin-top:-4px">Over and above technical metrics to evaluate whether an agent can hold a call. For a scaled voice AI orchestrator running evaluations for 20+ agents across 8+ languages and 5+ industries.</p>
+  </header>
+</div>
+
+<div style="border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(235px,100%),1fr));column-gap:clamp(20px,3vw,36px);row-gap:clamp(26px,4vw,40px);padding:clamp(30px,4.5vw,48px) 0 clamp(34px,5vw,54px)">
+      <div style="border-top:1px solid var(--ink);padding-top:16px;display:grid;gap:10px;align-content:start">
+        <div style="font-family:var(--display);font-size:clamp(52px,6.4vw,82px);font-weight:700;letter-spacing:-.045em;line-height:.9;font-variant-numeric:tabular-nums">2.5<span style="font-size:.38em;color:var(--accent);letter-spacing:0">×</span></div>
+        <div style="font-size:15.5px;font-weight:600;line-height:1.3">improvement in failure identification</div>
+        <div style="font-size:13px;color:var(--ink2);line-height:1.45">From 30% to 80% of failures caught once human judgement was made part of the evaluation loop</div>
+      </div>
+      <div style="border-top:1px solid var(--ink);padding-top:16px;display:grid;gap:10px;align-content:start">
+        <div style="font-family:var(--display);font-size:clamp(52px,6.4vw,82px);font-weight:700;letter-spacing:-.045em;line-height:.9;font-variant-numeric:tabular-nums">10<span style="font-size:.38em;color:var(--accent);letter-spacing:0">%</span></div>
+        <div style="font-size:15.5px;font-weight:600;line-height:1.3">of all call volume reviewed</div>
+        <div style="font-size:13px;color:var(--ink2);line-height:1.45">A steady, representative sample across every deployed agent, scaling as volume grows</div>
+      </div>
+      <div style="border-top:1px solid var(--ink);padding-top:16px;display:grid;gap:10px;align-content:start">
+        <div style="font-family:var(--display);font-size:clamp(52px,6.4vw,82px);font-weight:700;letter-spacing:-.045em;line-height:.9;font-variant-numeric:tabular-nums">20<span style="font-size:.38em;color:var(--accent);letter-spacing:0">+</span></div>
+        <div style="font-size:15.5px;font-weight:600;line-height:1.3">agents continuously reviewed</div>
+        <div style="font-size:13px;color:var(--ink2);line-height:1.45">Across 8+ languages and 5+ industries</div>
+      </div>
+      <div style="border-top:1px solid var(--ink);padding-top:16px;display:grid;gap:10px;align-content:start">
+        <div style="font-family:var(--display);font-size:clamp(52px,6.4vw,82px);font-weight:700;letter-spacing:-.045em;line-height:.9;font-variant-numeric:tabular-nums">15<span style="font-size:.38em;color:var(--accent);letter-spacing:0">+</span></div>
+        <div style="font-size:15.5px;font-weight:600;line-height:1.3">metrics across the pipeline</div>
+        <div style="font-size:13px;color:var(--ink2);line-height:1.45">One subjective "was this a good call" broken into scores across metrics for STT, LLM, TTS and extraction</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 01 · THE PROBLEM -->
+<section class="wrap" style="padding:clamp(48px,7vw,84px) clamp(18px,4vw,28px)">
+  <div style="display:grid;gap:clamp(24px,3.5vw,38px)">
+    <div style="display:grid;gap:12px;max-width:28ch">
+      <div class="eyebrow">01 · The problem</div>
+      <h2 style="font-size:clamp(27px,3.5vw,40px);line-height:1.08;font-weight:700;letter-spacing:-.02em">Problem Discovery needs human judgement</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:clamp(20px,3vw,34px)">
+      <div style="display:grid;gap:12px;align-content:start;border-top:2px solid var(--vendor);padding-top:18px">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--vendor)">Discovery breaks at scale</span>
+        <h3 style="font-size:clamp(21px,2.4vw,27px);line-height:1.15;font-weight:700;letter-spacing:-.015em">Sampling can't keep up with volume</h3>
+        <p style="font-size:15.5px;color:var(--ink2);line-height:1.6">Listening to real calls and applying judgment is how a team learns what breaks a conversation. That works at small volume. Once the platform is handling serious volume across many deployed agents, there's no bandwidth to sample at a meaningful scale, so issue detection turns sporadic and reactive.</p>
+        <p style="font-size:14px;color:var(--ink);border-top:1px solid var(--line);padding-top:12px;margin-top:2px"><b style="font-weight:600">Needs:</b> a steady, representative review that scales with volume, not a heroic listen.</p>
+      </div>
+      <div style="display:grid;gap:12px;align-content:start;border-top:2px solid var(--accent);padding-top:18px">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">Technical metrics don't tell you a call was good</span>
+        <h3 style="font-size:clamp(21px,2.4vw,27px);line-height:1.15;font-weight:700;letter-spacing:-.015em">Automated Evals can't hear a robotic voice</h3>
+        <p style="font-size:15.5px;color:var(--ink2);line-height:1.6">Quality was being read through latency, barge-in and similar measures. Those miss what actually matters — how the person on the other end perceives the call, or how the client would judge it if they sampled one.</p>
+        <p style="font-size:14px;color:var(--ink);border-top:1px solid var(--line);padding-top:12px;margin-top:2px"><b style="font-weight:600">Needs:</b> the subjective sense of a good call turned into metrics that can each be scored.</p>
+      </div>
+      <div style="display:grid;gap:12px;align-content:start;border-top:2px solid var(--note);padding-top:18px">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--note-ink)">Not just a hiring problem</span>
+        <h3 style="font-size:clamp(21px,2.4vw,27px);line-height:1.15;font-weight:700;letter-spacing:-.015em">Why it is tough to solve internally</h3>
+        <p style="font-size:15.5px;color:var(--ink2);line-height:1.6">The team tried interns, then a small internal reviewer group. Beyond the operational overhead, the job is not as simple as hiring people. It takes real investment to break the task into reviewable subtasks, build the tooling to capture judgment efficiently, and train and monitor reviewers to keep quality high.</p>
+        <p style="font-size:14px;color:var(--ink);border-top:1px solid var(--line);padding-top:12px;margin-top:2px"><b style="font-weight:600">Needs:</b> rubric design, workflow tooling and reviewer calibration as one system.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 · THE METHOD (loop) -->
+<section style="background:var(--band);color:#eef2f5">
+  <div class="wrap" style="padding:clamp(48px,7vw,86px) clamp(18px,4vw,28px)">
+    <div style="position:relative">
+      <svg id="loopsvg" viewBox="0 -22 1120 404" style="width:100%;height:auto;display:block" role="img" aria-labelledby="loopT loopD">
+        <title id="loopT">The RealLoop agent evaluation loop</title>
+        <desc id="loopD">A four-stage cycle: evaluation design, failure diagnosis, expert training data, monitor reliability, then back to design as new failure modes surface.</desc>
+        <path id="mp" d="M 130 180 A 430 132 0 0 1 990 180 A 430 132 0 0 1 130 180" fill="none" stroke="none"></path>
+        <ellipse cx="560" cy="180" rx="430" ry="132" fill="rgba(255,255,255,.022)" stroke="rgba(255,255,255,.14)" stroke-width="2"></ellipse>
+        <path id="loopflow" d="M 130 180 A 430 132 0 0 1 990 180 A 430 132 0 0 1 130 180" fill="none" stroke="#35c98f" stroke-width="2" stroke-dasharray="6 10" opacity=".85" style="animation:march 1.6s linear infinite"></path>
+        <circle r="5" cx="0" cy="0" fill="#35c98f"><animateMotion dur="10s" repeatCount="indefinite"><mpath href="#mp"></mpath></animateMotion></circle>
+        <circle r="5" cx="0" cy="0" fill="#35c98f"><animateMotion dur="10s" begin="-5s" repeatCount="indefinite"><mpath href="#mp"></mpath></animateMotion></circle>
+        <g><circle cx="560" cy="48" r="27" fill="#10181f" stroke="#35c98f" stroke-width="2"></circle><text x="560" y="48" dy=".35em" text-anchor="middle" fill="#35c98f" style="font-family:var(--mono);font-size:15px;font-weight:500">01</text></g>
+        <g><circle cx="990" cy="180" r="27" fill="#10181f" stroke="#35c98f" stroke-width="2"></circle><text x="990" y="180" dy=".35em" text-anchor="middle" fill="#35c98f" style="font-family:var(--mono);font-size:15px;font-weight:500">02</text></g>
+        <g><circle cx="560" cy="312" r="27" fill="#10181f" stroke="#9a80e6" stroke-width="2"></circle><text x="560" y="312" dy=".35em" text-anchor="middle" fill="#9a80e6" style="font-family:var(--mono);font-size:15px;font-weight:500">03</text></g>
+        <g><circle cx="130" cy="180" r="27" fill="#10181f" stroke="#35c98f" stroke-width="2"></circle><text x="130" y="180" dy=".35em" text-anchor="middle" fill="#35c98f" style="font-family:var(--mono);font-size:15px;font-weight:500">04</text></g>
+        <text x="560" y="4" dy=".35em" text-anchor="middle" fill="#b9c4cd" style="font-family:var(--mono);font-size:12px;letter-spacing:.09em">EVALUATION DESIGN</text>
+        <text x="990" y="228" dy=".35em" text-anchor="middle" fill="#b9c4cd" style="font-family:var(--mono);font-size:12px;letter-spacing:.09em">FAILURE DIAGNOSIS</text>
+        <text x="560" y="356" dy=".35em" text-anchor="middle" fill="#9a80e6" style="font-family:var(--mono);font-size:12px;letter-spacing:.09em">TRAINING DATA</text>
+        <text x="130" y="132" dy=".35em" text-anchor="middle" fill="#b9c4cd" style="font-family:var(--mono);font-size:12px;letter-spacing:.09em">MONITOR RELIABILITY</text>
+      </svg>
+      <div id="loopmid" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:400px;text-align:center;display:grid;gap:12px">
+        <div style="font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:#35c98f;font-weight:500">02 · The method</div>
+        <h2 style="font-size:clamp(27px,3.5vw,40px);line-height:1.08;font-weight:700;letter-spacing:-.02em;color:#fff">The loop</h2>
+        <p style="font-size:14.5px;line-height:1.6;color:#b9c4cd">Design the metrics, diagnose where the agent fails, build targeted data to fix it, monitor reliability as things change</p>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:12px;margin-top:clamp(24px,3vw,34px)">
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 18px;display:grid;gap:7px;align-content:start">
+        <div style="display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#93a1ae"><span>01</span><span>Evaluation design</span></div>
+        <div style="font-family:var(--display);font-size:16.5px;font-weight:700;color:#fff;line-height:1.25">Define success</div>
+        <div style="font-size:13.5px;color:#b9c4cd;line-height:1.5">Success criteria, rubrics and scoring for the agent's task</div>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#35c98f">15+ metrics · 4 pipeline stages</div>
+      </div>
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 18px;display:grid;gap:7px;align-content:start">
+        <div style="display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#93a1ae"><span>02</span><span>Failure diagnosis</span></div>
+        <div style="font-family:var(--display);font-size:16.5px;font-weight:700;color:#fff;line-height:1.25">Find where, why and how it fails</div>
+        <div style="font-size:13.5px;color:#b9c4cd;line-height:1.5">The right system per metric, run on representative volume</div>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#35c98f">tech + human, by metric</div>
+      </div>
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(154,128,230,.3);border-radius:12px;padding:16px 18px;display:grid;gap:7px;align-content:start">
+        <div style="display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#93a1ae"><span>03</span><span style="color:#9a80e6">Training data</span></div>
+        <div style="font-family:var(--display);font-size:16.5px;font-weight:700;color:#fff;line-height:1.25">Data built backwards from failures</div>
+        <div style="font-size:13.5px;color:#b9c4cd;line-height:1.5">Humans produce targeted data for the top failure modes</div>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#9a80e6">enable fine-tuning of the model/prompt/workflow</div>
+      </div>
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px 18px;display:grid;gap:7px;align-content:start">
+        <div style="display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#93a1ae"><span>04</span><span>Monitor reliability</span></div>
+        <div style="font-family:var(--display);font-size:16.5px;font-weight:700;color:#fff;line-height:1.25">Re-evaluate as things change</div>
+        <div style="font-size:13.5px;color:#b9c4cd;line-height:1.5">Always-on tracking as models, prompts, workflows and rules move</div>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#35c98f">IRR + ground truth</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 · THE EVALUATION SURFACE (pipeline table) -->
+<section class="wrap" style="padding:clamp(48px,7vw,84px) clamp(18px,4vw,28px)">
+  <div style="display:grid;gap:12px;max-width:32ch;margin-bottom:clamp(22px,3vw,32px)">
+    <div class="eyebrow">03 · What we measure</div>
+    <h2 style="font-size:clamp(27px,3.5vw,40px);line-height:1.08;font-weight:700;letter-spacing:-.02em">One "good call", broken into 15+ metrics</h2>
+    <p style="font-size:15.5px;color:var(--ink2);line-height:1.6;max-width:60ch">We turned a single subjective sense of quality into metrics that can each be scored on their own. Each metric gets the evaluation it actually needs — a machine, a human, or both.</p>
+  </div>
+  <div style="display:flex;gap:16px 22px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);margin-bottom:clamp(18px,2.5vw,24px)">
+    <span style="display:inline-flex;align-items:center;gap:7px"><i style="width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block"></i>Human-led</span>
+    <span style="display:inline-flex;align-items:center;gap:7px"><i style="width:9px;height:9px;border-radius:50%;background:var(--vendor);display:inline-block"></i>Machine</span>
+    <span style="display:inline-flex;align-items:center;gap:7px"><i style="width:9px;height:9px;border-radius:50%;background:var(--note);display:inline-block"></i>Hybrid</span>
+  </div>
+  <div style="display:grid;gap:clamp(26px,4vw,40px)">
+    <div style="display:grid;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:8px 14px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:14px">
+        <h3 style="font-family:var(--display);font-size:clamp(19px,2.2vw,23px);font-weight:700;letter-spacing:-.015em">Overall</h3>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">whole-call quality &amp; the extracted outcome</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px">
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Call naturalness</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></i>Human-led</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Does the whole call sound like a real person the customer would trust?</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--vendor);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Latency</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--vendor);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--vendor)"></i>Machine</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Dead air and slow responses that make the agent feel laggy or cut people off.</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Disposition</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Does the extracted outcome — like intent to pay — match what really happened?</p></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:8px 14px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:14px">
+        <h3 style="font-family:var(--display);font-size:clamp(19px,2.2vw,23px);font-weight:700;letter-spacing:-.015em">Speech to text</h3>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">STT · did the agent hear it right?</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px">
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Transcription</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Overall word accuracy — did the agent hear what was actually said?</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Entity capture</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Critical fields — order ID, phone, amount — captured exactly right.</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Numbers &amp; codes</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Digits, dates and alphanumeric codes, where one wrong token breaks the call.</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Proper nouns</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></i>Human-led</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Names, places and brands the model most often mishears.</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Code-switch</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Mixed-language speech transcribed cleanly, not garbled into nonsense.</p></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:8px 14px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:14px">
+        <h3 style="font-family:var(--display);font-size:clamp(19px,2.2vw,23px);font-weight:700;letter-spacing:-.015em">Reasoning</h3>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">LLM · did it understand and act right?</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px">
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Language adherence</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Does the agent stay in the language the caller is actually speaking?</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Goal completion</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Did the call actually do what the user rang in to get done?</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Knowledge retention</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Does the agent hold on to details the caller gave earlier?</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--note);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Stuck in loop</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--note-ink);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--note)"></i>Hybrid</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Repeating itself or looping without ever moving the call forward.</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--vendor);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Tool-name leak</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--vendor);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--vendor)"></i>Machine</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Internal tool or function names spoken out loud to the caller.</p></div>
+      </div>
+    </div>
+    <div style="display:grid;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:8px 14px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:14px">
+        <h3 style="font-family:var(--display);font-size:clamp(19px,2.2vw,23px);font-weight:700;letter-spacing:-.015em">Text to speech</h3>
+        <span style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">TTS · did it sound right?</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:12px">
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--vendor);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Barge-in</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--vendor);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--vendor)"></i>Machine</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Does the agent stop talking the moment the caller interrupts?</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Pronunciation</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></i>Human-led</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Wrong accents and mispronounced names, places and terms across languages.</p></div>
+      <div style="background:var(--card);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;padding:14px 15px 15px;display:grid;gap:6px;align-content:start"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span style="font-family:var(--display);font-size:16.5px;font-weight:700;letter-spacing:-.01em;line-height:1.2">Tone</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);display:inline-flex;align-items:center;gap:4px;flex:none"><i style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></i>Human-led</span></div><p style="font-size:13px;color:var(--ink2);line-height:1.5">Right words, wrong emotion — flat, robotic, or mismatched to the moment.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 · WHAT IT REVEALED -->
+<section class="wrap" style="padding:clamp(48px,7vw,84px) clamp(18px,4vw,28px)">
+  <div style="display:grid;gap:12px;max-width:30ch;margin-bottom:clamp(20px,3vw,30px)">
+    <div class="eyebrow">04 · Findings</div>
+    <h2 style="font-size:clamp(27px,3.5vw,40px);line-height:1.08;font-weight:700;letter-spacing:-.02em">What the breakdown revealed</h2>
+  </div>
+  <div style="border-bottom:1px solid var(--line)">
+
+    <!-- STT row -->
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,44px);padding:clamp(22px,3vw,32px) 0;border-top:1px solid var(--line)">
+      <div style="flex:1 1 250px;max-width:350px;display:grid;gap:12px;align-content:start">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">STT · speech to text</span>
+        <div style="font-family:var(--display);font-size:clamp(30px,3.6vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05">Values the call depends on, captured wrong</div>
+        <p style="font-size:15px;line-height:1.55;color:var(--ink2)">The agent records the wrong value for a field the outcome hinges on</p>
+      </div>
+      <div style="flex:2.1 1 400px;min-width:0">
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)"><b style="font-weight:600">Input capture errors</b> — wrong order ID, wrong phone number</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">a field the call depends on</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)">Order <b style="color:var(--ink);font-weight:600">BR-4021</b> captured as <span style="color:var(--bad);font-family:var(--display);font-weight:700">BR-4201</span>; <b style="color:var(--ink);font-weight:600">"double five"</b> logged as <span style="color:var(--bad);font-family:var(--display);font-weight:700">"5"</span></span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Transcription breaks on proper nouns — names, places, brands</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">derails comprehension of the call</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)"><b style="color:var(--ink);font-weight:600">"Andheri"</b> heard as <span style="color:var(--bad);font-family:var(--display);font-weight:700">"Andhary"</span>; <b style="color:var(--ink);font-weight:600">"Bengaluru"</b> as <span style="color:var(--bad);font-family:var(--display);font-weight:700">"Bengalow"</span></span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Code-switched speech breaks in ways single-language audio doesn't</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">across 8+ languages</span></div>
+      </div>
+    </div>
+
+    <!-- LLM row -->
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,44px);padding:clamp(22px,3vw,32px) 0;border-top:1px solid var(--line)">
+      <div style="flex:1 1 250px;max-width:350px;display:grid;gap:12px;align-content:start">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--vendor)">LLM · reasoning</span>
+        <div style="font-family:var(--display);font-size:clamp(30px,3.6vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05">Failures the LLM judge can't flag</div>
+        <p style="font-size:15px;line-height:1.55;color:var(--ink2)">Agent misses the goal, drifts language, loops, or leaks its own plumbing to the caller.</p>
+      </div>
+      <div style="flex:2.1 1 400px;min-width:0">
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)"><b style="font-weight:600">Goal completion</b> — the call ends without doing what the user asked</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">the outcome that matters</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)">Caller asks to reschedule delivery; agent confirms the address, then <span style="color:var(--bad);font-family:var(--display);font-weight:700">hangs up without rebooking</span></span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Language adherence — drifts out of the requested language mid-call</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">hybrid, calibrated to humans</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)">Caller speaks Hindi; agent answers <span style="color:var(--bad);font-family:var(--display);font-weight:700">in English</span> from turn three onward</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Stuck in a loop — repeats itself and can't recover</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">LLM judge, human-calibrated</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Tool-name leak — internal function names spoken to the caller</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">machine-detectable</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)">Agent says <span style="color:var(--bad);font-family:var(--mono);font-size:13px">"let me run check_order_status"</span> out loud</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Knowledge retention — loses a detail the caller gave earlier</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">context the agent should hold</span></div>
+      </div>
+    </div>
+
+    <!-- TTS row -->
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,44px);padding:clamp(22px,3vw,32px) 0;border-top:1px solid var(--line)">
+      <div style="flex:1 1 250px;max-width:350px;display:grid;gap:12px;align-content:start">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)">TTS · text to speech</span>
+        <div style="font-family:var(--display);font-size:clamp(30px,3.6vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05">Right words, wrong delivery</div>
+        <p style="font-size:15px;line-height:1.55;color:var(--ink2)">Tone and pronunciation live outside the transcript entirely. Only a listener catches them, and they decide whether the agent sounds human.</p>
+      </div>
+      <div style="flex:2.1 1 400px;min-width:0">
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)"><b style="font-weight:600">Tone failures</b> — correct words, flat or wrong emotion</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">the caller sounds robotic</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)"><b style="color:var(--ink);font-weight:600">"Good news — your refund is approved"</b> read in a <span style="color:var(--bad);font-family:var(--display);font-weight:700">flat, sad tone</span></span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Pronunciation — wrong accents, mispronounced proper nouns</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">human-led, across languages</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)"><b style="color:var(--ink);font-weight:600">PAN</b> spoken as <span style="color:var(--bad);font-family:var(--display);font-weight:700">"pain"</span>, <b style="color:var(--ink);font-weight:600">KYC</b> as <span style="color:var(--bad);font-family:var(--display);font-weight:700">"kyz"</span></span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+      </div>
+    </div>
+
+    <!-- Extraction row -->
+    <div style="display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,44px);padding:clamp(22px,3vw,32px) 0;border-top:1px solid var(--line)">
+      <div style="flex:1 1 250px;max-width:350px;display:grid;gap:12px;align-content:start">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--note-ink)">Extraction</span>
+        <div style="font-family:var(--display);font-size:clamp(30px,3.6vw,42px);font-weight:700;letter-spacing:-.025em;line-height:1.05">The judge scoring the call can be wrong</div>
+        <p style="font-size:15px;line-height:1.55;color:var(--ink2)">Disposition — often a call's most important output — comes from an LLM judge that had never been measured against a human. We compute its accuracy and plug humans in where it's most likely to be wrong.</p>
+      </div>
+      <div style="flex:2.1 1 400px;min-width:0">
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)"><b style="font-weight:600">Disposition accuracy</b> — e.g. intent-to-pay on collections calls</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">LLM judge, benchmarked to humans</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink2)">Borrower says <b style="color:var(--ink);font-weight:600">"I'll try to arrange something"</b>; judge labels it <span style="color:var(--bad);font-family:var(--display);font-weight:700">"will pay"</span></span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:right">example</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">On one fintech deployment, the judge mislabeled intent</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">30% of the time</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Accuracy on multi-intent calls vs single-intent</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">45% against 85%</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px 16px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)"><span style="flex:1 1 230px;min-width:0;font-size:14px;line-height:1.5;color:var(--ink)">Humans resolve the high-risk cases and feed the judge back</span><span style="flex:0 0 auto;margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink2);text-align:right">blended accuracy held</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 05 · INTO PRODUCTION -->
+<section style="background:var(--band);color:#eef2f5">
+  <div class="wrap" style="padding:clamp(48px,7vw,86px) clamp(18px,4vw,28px);display:grid;gap:clamp(26px,4vw,44px)">
+    <div style="display:grid;gap:clamp(18px,3vw,30px);grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));align-items:start">
+      <div style="display:grid;gap:14px">
+        <div style="font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:#35c98f;font-weight:500">05 · Into production &amp; beyond</div>
+        <h2 style="font-size:clamp(27px,3.4vw,38px);line-height:1.08;font-weight:700;letter-spacing:-.02em;color:#fff;max-width:22ch">Measurement that keeps up with the agent</h2>
+        <div style="font-family:var(--display);font-size:clamp(20px,2.4vw,27px);font-weight:600;line-height:1.25;letter-spacing:-.01em;color:#35c98f;max-width:30ch;border-top:1px solid rgba(255,255,255,.14);padding-top:16px;margin-top:4px">A new failure mode isn't a surprise. It's the next thing we build a measurement for.</div>
+      </div>
+      <p style="font-size:16px;line-height:1.65;color:#c8d2da;max-width:62ch">The engagement becomes a business-as-usual pipeline that reviews <b style="color:#fff;font-weight:600">~10% of calls</b> across agent types, languages and industries. As fresh problems surface we design the way to track each one at scale, and build a human or an automated evaluation depending on what the metric actually needs.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:clamp(14px,2vw,20px)">
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px 22px;display:grid;gap:8px;align-content:start">
+        <h3 style="font-size:15.5px;font-weight:700;color:#fff">Always-on tracking</h3>
+        <p style="font-size:14px;color:#b9c4cd;line-height:1.55">A representative sample scored continuously, so regressions show up as models, prompts and rules change.</p>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#35c98f;margin-top:2px">~10% of volume</div>
+      </div>
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px 22px;display:grid;gap:8px;align-content:start">
+        <h3 style="font-size:15.5px;font-weight:700;color:#fff">Reliability, measured</h3>
+        <p style="font-size:14px;color:#b9c4cd;line-height:1.55">Agent reliability read through inter-rater agreement and comparison against a ground-truth set.</p>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#35c98f;margin-top:2px">IRR + ground truth</div>
+      </div>
+      <div style="background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px 22px;display:grid;gap:8px;align-content:start">
+        <h3 style="font-size:15.5px;font-weight:700;color:#fff">A playbook that ports</h3>
+        <p style="font-size:14px;color:#b9c4cd;line-height:1.55">The rubric design, workflow tooling and reviewer training deploy across new use-cases with high confidence.</p>
+        <div style="font-family:var(--mono);font-size:11.5px;color:#35c98f;margin-top:2px">reusable by design</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="wrap" style="padding:clamp(40px,6vw,64px) clamp(18px,4vw,28px) 0">
+  <div style="background:var(--cta-bg);color:#fff;border-radius:16px;padding:clamp(28px,5vw,48px);display:flex;flex-wrap:wrap;gap:26px;align-items:center;justify-content:space-between">
+    <div style="flex:1 1 320px;min-width:0;display:grid;gap:12px">
+      <h2 style="font-size:clamp(25px,3vw,34px);line-height:1.1;font-weight:700;letter-spacing:-.02em;color:#fff">Put human judgment on your agents</h2>
+      <p style="color:#b9c4cd;max-width:56ch;font-size:15.5px">Send us the calls your agent actually handles. We come back with a metric breakdown, the failures that matter, and a monitoring pipeline that scales.</p>
+    </div>
+    <a target="_blank" rel="noopener" href="https://portal.realloop.in/portal/new-use-case" style="background:#35c98f;color:#10181f;border-radius:999px;padding:14px 22px;font-weight:600;font-size:15.5px;flex:none">Start with sample data</a>
+  </div>
+  <footer style="padding:28px 0 48px;font-size:12.5px;color:var(--ink2);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap">
+    <span>© 2026 RealLoop · The human layer for high quality AI deployment</span>
+    <span>Figures from RealLoop's agent evaluation program. Fintech disposition figures from the linked collections engagement.</span>
+  </footer>
+</div>
+
+</div>
+<script>
+(function(){
+  var root=document.documentElement,b=document.getElementById('themeToggle');
+  function cur(){var t=root.getAttribute('data-theme');if(t)return t;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}
+  function paint(){b.textContent=cur()==='dark'?'Light':'Dark';}
+  try{var s=localStorage.getItem('rl-theme');if(s)root.setAttribute('data-theme',s);}catch(e){}
+  b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('rl-theme',n);}catch(e){}paint();});
+  paint();
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){var sv=document.getElementById('loopsvg');if(sv&&sv.pauseAnimations)sv.pauseAnimations();}
+})();
+</script>
+</body>
+</html>
